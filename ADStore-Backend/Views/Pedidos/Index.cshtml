@@ -1,0 +1,56 @@
+@model ADStoreBackend.Models.PaginatedViewModel<ADStoreBackend.Models.PedidoDto>
+@{
+    ViewData["Title"] = "Pedidos";
+}
+
+<h2 class="mb-3">Pedidos</h2>
+
+@if (!Model.Items.Any())
+{
+    <p class="text-muted">No hay pedidos registrados.</p>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td>@p.Id</td>
+                    <td>@p.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(p.Usuario?.Nombre ?? $"Usuario #{p.UsuarioId}")</td>
+                    <td>$@p.Total.ToString("N2")</td>
+                    <td>
+                        <span class="badge @EstadoBadge(p.Estado)">@p.Estado</span>
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-info text-white">Ver</a>
+                        <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Estado</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <partial name="_Paginacion" model="Model" />
+}
+
+@functions {
+    string EstadoBadge(string estado) => estado switch
+    {
+        "Pagado" => "bg-success",
+        "Enviado" => "bg-primary",
+        "Entregado" => "bg-secondary",
+        _ => "bg-warning text-dark"
+    };
+}

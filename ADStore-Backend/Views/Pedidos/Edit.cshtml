@@ -1,0 +1,25 @@
+@model ADStoreBackend.Models.PedidoEditViewModel
+@{
+    ViewData["Title"] = $"Editar estado – Pedido #{Model.Id}";
+}
+
+<h2>Editar estado – Pedido #@Model.Id</h2>
+<hr />
+
+<div class="mb-3 text-muted" style="max-width:500px">
+    <p class="mb-1"><strong>Usuario:</strong> @(Model.UsuarioNombre ?? $"#{Model.UsuarioId}")</p>
+    <p class="mb-1"><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+    <p class="mb-0"><strong>Total:</strong> $@Model.Total.ToString("N2")</p>
+</div>
+
+<form asp-action="Edit" method="post" style="max-width:400px">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+    <input asp-for="Id" type="hidden" />
+    <div class="mb-3">
+        <label asp-for="Estado" class="form-label">Estado *</label>
+        <select asp-for="Estado" asp-items="Model.Estados" class="form-select"></select>
+        <span asp-validation-for="Estado" class="text-danger small"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

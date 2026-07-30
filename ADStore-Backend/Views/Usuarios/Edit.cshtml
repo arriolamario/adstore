@@ -1,0 +1,86 @@
+@model ADStoreBackend.Models.UsuarioFormViewModel
+@{
+    ViewData["Title"] = "Editar usuario";
+}
+
+<h2>Editar usuario</h2>
+<hr />
+
+<div class="row g-4" style="max-width:900px;">
+
+    <!-- Formulario datos -->
+    <div class="col-md-7">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+            <input asp-for="Id" type="hidden" />
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">
+                    Nueva contraseña <span class="text-muted small">(dejar vacío para no cambiar)</span>
+                </label>
+                <input asp-for="Password" class="form-control" placeholder="••••••" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Rol" class="form-label"></label>
+                <select asp-for="Rol" class="form-select">
+                    <option value="Administrador">Administrador</option>
+                    <option value="Vendedor">Vendedor</option>
+                    <option value="Cliente">Cliente</option>
+                </select>
+            </div>
+            <div class="mb-3 form-check">
+                <input asp-for="Activo" class="form-check-input" />
+                <label asp-for="Activo" class="form-check-label">Activo</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+
+    <!-- Avatar -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="card-title mb-3">Avatar</h6>
+                @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl" class="rounded-circle mb-3"
+                         style="width:120px;height:120px;object-fit:cover;" />
+                }
+                else
+                {
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width:120px;height:120px;">
+                        <span class="text-white fs-1">👤</span>
+                    </div>
+                }
+
+                <form asp-action="SubirAvatar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data"
+                      class="mb-2">
+                    <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp"
+                           class="form-control form-control-sm mb-2" required />
+                    <div class="form-text mb-2">JPG, PNG o WEBP. Máx 2MB.</div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Subir avatar</button>
+                </form>
+
+                @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                {
+                    <form asp-action="EliminarAvatar" asp-route-id="@Model.Id" method="post"
+                          onsubmit="return confirm('¿Eliminar el avatar?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Eliminar avatar</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

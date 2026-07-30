@@ -1,0 +1,49 @@
+@model ADStoreBackend.Models.PaginatedViewModel<ADStoreBackend.Models.UsuarioDto>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Usuarios</h2>
+    <a asp-action="Create" class="btn btn-primary">+ Nuevo usuario</a>
+</div>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model.Items)
+        {
+            <tr>
+                <td>@u.Id</td>
+                <td>@u.Nombre</td>
+                <td>@u.Email</td>
+                <td>
+                    <span class="badge bg-info text-dark">@u.Rol</span>
+                </td>
+                <td>
+                    <span class="badge @(u.Activo ? "bg-success" : "bg-secondary")">
+                        @(u.Activo ? "Activo" : "Inactivo")
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <form asp-action="Delete" asp-route-id="@u.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('¿Eliminar @u.Nombre?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<partial name="_Paginacion" model="Model" />

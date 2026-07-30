@@ -1,0 +1,3 @@
+# Carpeta para avatares de usuarios
+Esta carpeta contiene las imágenes de perfil subidas por los usuarios.
+Los archivos se generan con nombres únicos (GUID) y extensiones permitidas: .jpg, .jpeg, .png, .webp

@@ -1,0 +1,50 @@
+@model ADStoreBackend.Models.PedidoDto
+@{
+    ViewData["Title"] = $"Pedido #{Model.Id}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Pedido #@Model.Id</h2>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">Cambiar estado</a>
+        <a asp-action="Index" class="btn btn-secondary btn-sm ms-2">← Volver</a>
+    </div>
+</div>
+
+<div class="card mb-4" style="max-width:500px">
+    <div class="card-body">
+        <p class="mb-1"><strong>Usuario:</strong> @(Model.Usuario.Nombre ?? $"#{Model.UsuarioId}")</p>
+        <p class="mb-1"><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+        <p class="mb-1"><strong>Estado:</strong> <span class="badge bg-warning text-dark">@Model.Estado</span></p>
+        <p class="mb-0"><strong>Total:</strong> $@Model.Total.ToString("N2")</p>
+    </div>
+</div>
+
+<h5>Ítems del pedido</h5>
+<table class="table table-bordered" style="max-width:700px">
+    <thead class="table-light">
+        <tr>
+            <th>Producto</th>
+            <th class="text-center">Cantidad</th>
+            <th class="text-end">Precio unit.</th>
+            <th class="text-end">Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Detalles)
+        {
+            <tr>
+                <td>@(d.ProductoNombre ?? $"Ítem #{d.ProductoTalleId}")</td>
+                <td class="text-center">@d.Cantidad</td>
+                <td class="text-end">$@d.PrecioUnitario.ToString("N2")</td>
+                <td class="text-end">$@((d.Cantidad * d.PrecioUnitario).ToString("N2"))</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr class="table-dark">
+            <td colspan="3" class="text-end fw-bold">Total</td>
+            <td class="text-end fw-bold">$@Model.Total.ToString("N2")</td>
+        </tr>
+    </tfoot>
+</table>

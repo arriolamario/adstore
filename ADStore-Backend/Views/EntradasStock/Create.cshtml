@@ -1,0 +1,140 @@
+@model ADStoreBackend.Models.EntradaStockFormViewModel
+@{
+    ViewData["Title"] = "Nueva entrada de stock";
+}
+
+<h2>Nueva entrada de stock</h2>
+<hr />
+
+<form asp-action="Create" method="post" id="formEntrada">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+    <div class="row g-3 mb-4" style="max-width:800px;">
+        <div class="col-md-4">
+            <label asp-for="ProveedorId" class="form-label">Proveedor *</label>
+            <select asp-for="ProveedorId" asp-items="Model.Proveedores" class="form-select">
+                <option value="">— Seleccionar —</option>
+            </select>
+            <span asp-validation-for="ProveedorId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Fecha" class="form-label">Fecha *</label>
+            <input asp-for="Fecha" type="date" class="form-control" />
+            <span asp-validation-for="Fecha" class="text-danger small"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="NumeroDocumento" class="form-label">Nro Documento *</label>
+            <input asp-for="NumeroDocumento" class="form-control" />
+            <span asp-validation-for="NumeroDocumento" class="text-danger small"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Observaciones" class="form-label">Observaciones</label>
+            <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+
+    <h5>Detalles de la entrada</h5>
+
+    <table class="table table-bordered" id="tablaDetalles">
+        <thead class="table-light">
+            <tr>
+                <th>Producto</th>
+                <th>Talle</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="bodyDetalles">
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="agregarFila()">
+        + Agregar producto
+    </button>
+
+    <div class="d-flex align-items-center gap-3 mt-3">
+        <button type="submit" class="btn btn-primary">Guardar entrada</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        <span class="ms-auto fw-bold">Total: $<span id="totalGeneral">0.00</span></span>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    Model.Productos.Where(p => p.Value != "").Select(p => new { value = p.Value, text = p.Text })
+                    ));
+
+        let filaIndex = 0;
+
+        function agregarFila() {
+            const tbody = document.getElementById('bodyDetalles');
+            const i = filaIndex++;
+
+            const opcionesProducto = productos.map(p =>
+                `<option value="${p.value}">${p.text}</option>`
+            ).join('');
+
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>
+                    <select class="form-select form-select-sm sel-producto" onchange="cargarTalles(this, ${i})">
+                        <option value="">— Seleccionar —</option>
+                        ${opcionesProducto}
+                    </select>
+                </td>
+                <td>
+                    <select name="Detalles[${i}].ProductoTalleId" class="form-select form-select-sm sel-talle" disabled>
+                        <option value="">— primero elige producto —</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="Detalles[${i}].Cantidad" class="form-control form-control-sm inp-cantidad"
+                           min="1" value="1" onchange="calcularTotal()" />
+                </td>
+                <td>
+                    <input type="number" name="Detalles[${i}].PrecioUnitario" class="form-control form-control-sm inp-precio"
+                           min="0.01" step="0.01" value="0" onchange="calcularTotal()" />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcularTotal()">✕</button>
+                </td>
+            `;
+            tbody.appendChild(fila);
+        }
+
+        async function cargarTalles(selectProducto, i) {
+            const productoId = selectProducto.value;
+            const fila = selectProducto.closest('tr');
+            const selTalle = fila.querySelector('.sel-talle');
+
+            if (!productoId) {
+                selTalle.innerHTML = '<option value="">— primero elige producto —</option>';
+                selTalle.disabled = true;
+                return;
+            }
+
+            const res = await fetch(`/EntradasStock/GetTalles?productoId=${productoId}`);
+            const talles = await res.json();
+
+            selTalle.innerHTML = talles.map(t =>
+                `<option value="${t.id}">${t.talle} (stock: ${t.stock})</option>`
+            ).join('');
+            selTalle.disabled = false;
+        }
+
+        function calcularTotal() {
+            let total = 0;
+            document.querySelectorAll('#bodyDetalles tr').forEach(fila => {
+                const cant = parseFloat(fila.querySelector('.inp-cantidad')?.value || 0);
+                const precio = parseFloat(fila.querySelector('.inp-precio')?.value || 0);
+                total += cant * precio;
+            });
+            document.getElementById('totalGeneral').textContent = total.toFixed(2);
+        }
+
+        // Agregar una fila inicial
+        agregarFila();
+    </script>
+}

@@ -1,0 +1,36 @@
+@model ADStoreBackend.Models.UsuarioFormViewModel
+@{
+    ViewData["Title"] = "Nuevo usuario";
+}
+
+<h2>Nuevo usuario</h2>
+<hr />
+
+<form asp-action="Create" method="post" style="max-width: 500px;">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Contraseña *</label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Rol" class="form-label"></label>
+        <select asp-for="Rol" class="form-select">
+            <option value="Administrador">Administrador</option>
+            <option value="Vendedor">Vendedor</option>
+            <option value="Cliente" selected>Cliente</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

@@ -1,0 +1,112 @@
+@model List<ADStoreBackend.Models.ProductoTalleDto>
+@{
+    var producto = ViewBag.Producto as ADStoreBackend.Models.ProductoDto;
+    ViewData["Title"] = "Talles — " + producto?.Nombre;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Talles de @producto?.Nombre</h2>
+    <a asp-action="Index" class="btn btn-secondary">← Volver</a>
+</div>
+
+<div class="row g-4">
+    <!-- Agregar talle -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Agregar talle</h5>
+                <form asp-action="AgregarTalle" asp-route-id="@producto?.Id" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Talle *</label>
+                        <input type="text" name="talle" class="form-control" placeholder="Ej: S, M, L, XL, 42" required
+                               maxlength="20" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock inicial *</label>
+                        <input type="number" name="stock" class="form-control" value="0" min="0" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Agregar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de talles -->
+    <div class="col-md-8">
+        @if (!Model.Any())
+        {
+            <p class="text-muted">Este producto no tiene talles. Agregá uno desde el formulario.</p>
+        }
+        else
+        {
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Talle</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.OrderBy(x => x.Talle))
+                    {
+                        <tr>
+                            <td>@t.Talle</td>
+                            <td>@t.Stock</td>
+                            <td class="d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-warning"
+                                        onclick="abrirEditar(@t.Id, '@t.Talle', @t.Stock)">
+                                    Editar
+                                </button>
+                                <form asp-action="EliminarTalle" asp-route-id="@producto?.Id" asp-route-talleId="@t.Id"
+                                      method="post" onsubmit="return confirm('¿Eliminar talle @t.Talle?')">
+                                    <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+    <!-- Modal editar talle -->
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="EditarTalle" asp-route-id="@producto?.Id" method="post" id="formEditar">
+                    <input type="hidden" name="talleId" id="editTalleId" />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar talle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Talle *</label>
+                            <input type="text" name="talle" id="editTalle" class="form-control" required
+                                   maxlength="20" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stock *</label>
+                            <input type="number" name="stock" id="editStock" class="form-control" min="0" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+                function abrirEditar(id, talle, stock) {
+                    document.getElementById('editTalleId').value = id;
+                    document.getElementById('editTalle').value = talle;
+                    document.getElementById('editStock').value = stock;
+                    new bootstrap.Modal(document.getElementById('modalEditar')).show();
+                }
+        </script>
+    }
+</div>

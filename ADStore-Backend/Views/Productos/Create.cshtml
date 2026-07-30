@@ -1,0 +1,49 @@
+@model ADStoreBackend.Models.ProductoFormViewModel
+@{
+    ViewData["Title"] = "Nuevo producto";
+}
+
+<h2>Nuevo producto</h2>
+<hr />
+
+<form asp-action="Create" method="post" style="max-width: 600px;">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label"></label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Precio" class="form-label"></label>
+        <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
+        <span asp-validation-for="Precio" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="MarcaId" class="form-label">Marca *</label>
+        <select asp-for="MarcaId" asp-items="Model.Marcas" class="form-select">
+            <option value="">— Seleccionar —</option>
+        </select>
+        <span asp-validation-for="MarcaId" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="CategoriaId" class="form-label">Categoría *</label>
+        <select asp-for="CategoriaId" asp-items="Model.Categorias" class="form-select">
+            <option value="">— Seleccionar —</option>
+        </select>
+        <span asp-validation-for="CategoriaId" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ProveedorId" class="form-label">Proveedor</label>
+        <select asp-for="ProveedorId" asp-items="Model.Proveedores" class="form-select"></select>
+    </div>
+    <div class="mb-3 form-check">
+        <input asp-for="Activo" class="form-check-input" />
+        <label asp-for="Activo" class="form-check-label">Activo</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

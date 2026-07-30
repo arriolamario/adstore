@@ -1,0 +1,36 @@
+.home-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 20px;
+}
+
+.login-section {
+  text-align: center;
+}
+
+.main-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.main-content button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.main-content button:hover {
+  background-color: #c82333;
+}

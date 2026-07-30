@@ -1,0 +1,51 @@
+@model ADStoreBackend.Models.PaginatedViewModel<ADStoreBackend.Models.ProductoDto>
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Productos</h2>
+    <a asp-action="Create" class="btn btn-primary">+ Nuevo producto</a>
+</div>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Items)
+        {
+            <tr>
+                <td>@p.Id</td>
+                <td>@p.Nombre</td>
+                <td>@p.MarcaNombre</td>
+                <td>@p.CategoriaNombre</td>
+                <td>$@p.Precio.ToString("N2")</td>
+                <td>
+                    <span class="badge @(p.Activo ? "bg-success" : "bg-secondary")">
+                        @(p.Activo ? "Activo" : "Inactivo")
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Imagenes" asp-route-id="@p.Id" class="btn btn-sm btn-info text-white">Imágenes</a>
+                    <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Talles" asp-route-id="@p.Id" class="btn btn-sm btn-secondary">Talles</a>
+                    <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('¿Eliminar @p.Nombre?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<partial name="_Paginacion" model="Model" />
