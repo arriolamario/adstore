@@ -40,7 +40,9 @@ export default function Header() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <h1
-          style={{ margin: 0, fontSize: 24, cursor: 'pointer' }}
+          style={{ 
+            color: 'white',
+            margin: 0, fontSize: 24, cursor: 'pointer' }}
           onClick={() => navigate('/')}
         >
           ADStore

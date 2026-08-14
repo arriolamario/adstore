@@ -1,8 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 export default function ProductoCard({ producto }) {
   const navigate = useNavigate();
-  const imagenUrl = producto.imagenes?.[0]?.urlImagen
-    ? producto.imagenes[0].urlImagen
+  // const imagenUrl = producto.imagenes?.[0]?.urlImagen
+  //   ? producto.imagenes[0].urlImagen
+  //   : null;
+
+  const imagenUrl = producto.imagenPrincipal
+    ? producto.imagenPrincipal
     : null;
 
   return (
