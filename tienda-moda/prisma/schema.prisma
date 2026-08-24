@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum AvailabilityType {
+  IN_STOCK
+  PREORDER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  NOT_REQUIRED
+  PENDING
+  PROOF_SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum DeliveryMethod {
+  PICKUP
+  UBER_MOTO
+}
+
+enum StockMovementType {
+  PURCHASE
+  POS_SALE
+  ADJUSTMENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  phone        String?
+  role         UserRole @default(CUSTOMER)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]
+  stockMovements StockMovement[]
+  posSales     PosSale[]
+  purchases    Purchase[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  category    String
+  color       String?
+  price       Int
+  imageUrl    String
+  stock       Int      @default(0)
+  availability AvailabilityType @default(IN_STOCK)
+  leadTimeDays Int      @default(5)
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItems  OrderItem[]
+  variants    ProductVariant[]
+  posSaleItems PosSaleItem[]
+  purchaseItems PurchaseItem[]
+}
+
+model ProductVariant {
+  id           String   @id @default(cuid())
+  productId    String
+  sku          String   @unique
+  size         String
+  color        String?
+  stock        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
+  stockMovements StockMovement[]
+  posSaleItems PosSaleItem[]
+  purchaseItems PurchaseItem[]
+  @@unique([productId, size, color])
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  userId         String
+  status         OrderStatus    @default(PENDING)
+  paymentMethod  PaymentMethod
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentReceiptUrl String?
+  deliveryMethod DeliveryMethod
+  deliveryAddress String?
+  total          Int
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  productId    String
+  variantId    String
+  productName  String
+  unitPrice    Int
+  quantity     Int
+  preorder     Boolean @default(false)
+  leadTimeDays Int?
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product @relation(fields: [productId], references: [id])
+  variant      ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  variantId   String
+  createdById String
+  type        StockMovementType
+  quantity    Int
+  note        String?
+  createdAt   DateTime          @default(now())
+  variant     ProductVariant    @relation(fields: [variantId], references: [id])
+  createdBy   User              @relation(fields: [createdById], references: [id])
+}
+
+model PosSale {
+  id            String        @id @default(cuid())
+  soldById      String
+  paymentMethod PaymentMethod
+  total         Int
+  notes         String?
+  createdAt     DateTime      @default(now())
+  soldBy        User          @relation(fields: [soldById], references: [id])
+  items         PosSaleItem[]
+}
+
+model PosSaleItem {
+  id          String         @id @default(cuid())
+  saleId      String
+  productId   String
+  variantId   String
+  productName String
+  unitPrice   Int
+  quantity    Int
+  sale        PosSale        @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product        @relation(fields: [productId], references: [id])
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Purchase {
+  id           String         @id @default(cuid())
+  purchasedById String
+  supplier     String?
+  total        Int?
+  notes        String?
+  createdAt    DateTime       @default(now())
+  purchasedBy  User           @relation(fields: [purchasedById], references: [id])
+  items        PurchaseItem[]
+}
+
+model PurchaseItem {
+  id          String         @id @default(cuid())
+  purchaseId  String
+  productId   String
+  variantId   String
+  productName String
+  unitCost    Int?
+  quantity    Int
+  purchase    Purchase       @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product     Product        @relation(fields: [productId], references: [id])
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+}
