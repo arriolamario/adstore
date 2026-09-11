@@ -19,7 +19,7 @@ export default function HowItWorks() {
       <div className="container">
         <div className="section-head section-head--center">
           <span className="eyebrow">Como funciona</span>
-          <h2 className="section-title">Reservar en AdStore es simple</h2>
+          <h2 className="section-title">Reservar en AD Moda & Confort es simple</h2>
           <p className="section-lead">Tres pasos y tu producto queda separado a tu nombre.</p>
         </div>
 

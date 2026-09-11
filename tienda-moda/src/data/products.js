@@ -1,4 +1,4 @@
-/* Catalogo semilla de AdStore.
+/* Catalogo semilla de AD Moda & Confort.
    availability: 'stock' (entrega inmediata) | 'order' (pedido, ~5 dias habiles)
 
    - Productos 'stock': el inventario se lleva POR TALLE en `stock` = { talle: unidades }.
@@ -45,7 +45,7 @@ export const SEED_PRODUCTS = [
     description: 'Campera liviana plegable, resistente al agua y al viento. Costuras selladas y capucha ajustable.',
   },
   {
-    id: 'p-005', name: 'Buzo Oversize Heavy', brand: 'AdStore Basics', category: 'Ropa',
+    id: 'p-005', name: 'Buzo Oversize Heavy', brand: 'AD Basics', category: 'Ropa',
     price: 78990, availability: 'stock',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     stock: { S: 4, M: 6, L: 6, XL: 5, XXL: 3 },
@@ -53,7 +53,7 @@ export const SEED_PRODUCTS = [
     description: 'Frisa de 480 g/m2, calce oversize y punos reforzados. Prenda estrella para el invierno.',
   },
   {
-    id: 'p-006', name: 'Remera Pima Essential', brand: 'AdStore Basics', category: 'Ropa',
+    id: 'p-006', name: 'Remera Pima Essential', brand: 'AD Basics', category: 'Ropa',
     price: 32990, availability: 'stock',
     sizes: ['S', 'M', 'L', 'XL'],
     stock: { S: 8, M: 12, L: 12, XL: 8 },
@@ -76,14 +76,14 @@ export const SEED_PRODUCTS = [
     description: 'Zapatilla sin cordones de lona resistente. Liviana y flexible para el dia a dia.',
   },
   {
-    id: 'p-009', name: 'Mochila Urban 22L', brand: 'AdStore Basics', category: 'Accesorios',
+    id: 'p-009', name: 'Mochila Urban 22L', brand: 'AD Basics', category: 'Accesorios',
     price: 64990, availability: 'stock',
     sizes: ['Unico'], stock: { Unico: 10 },
     image: img('1553062407-98eeb64c6a62'),
     description: 'Mochila con compartimento acolchado para notebook 15", tela repelente y espalda ventilada.',
   },
   {
-    id: 'p-010', name: 'Gorra Trucker Logo', brand: 'AdStore Basics', category: 'Accesorios',
+    id: 'p-010', name: 'Gorra Trucker Logo', brand: 'AD Basics', category: 'Accesorios',
     price: 24990, availability: 'stock',
     sizes: ['Unico'], stock: { Unico: 30 },
     image: img('1588850561407-ed78c282e89b'),
@@ -113,7 +113,7 @@ export const SEED_PRODUCTS = [
     description: 'Abrigo acolchado con relleno termico reciclado. Compacta y abrigada sin volumen.',
   },
   {
-    id: 'p-014', name: 'Medias Cushion Pack x3', brand: 'AdStore Basics', category: 'Accesorios',
+    id: 'p-014', name: 'Medias Cushion Pack x3', brand: 'AD Basics', category: 'Accesorios',
     price: 18990, availability: 'stock',
     sizes: ['35-38', '39-42', '43-46'],
     stock: { '35-38': 15, '39-42': 20, '43-46': 15 },
@@ -129,7 +129,7 @@ export const SEED_PRODUCTS = [
     description: 'Suela vulcanizada de alto agarre y puntera reforzada. Pensada para uso intensivo.',
   },
   {
-    id: 'p-016', name: 'Camisa Lino Relajada', brand: 'AdStore Basics', category: 'Ropa',
+    id: 'p-016', name: 'Camisa Lino Relajada', brand: 'AD Basics', category: 'Ropa',
     price: 69990, availability: 'order',
     sizes: ['S', 'M', 'L', 'XL'], stock: {},
     image: img('1602810318383-e386cc2a3ccf'),
@@ -144,7 +144,7 @@ export const SEED_PRODUCTS = [
     description: 'Botin estilo Chelsea de cuero con elasticos laterales y suela track. Versatil y elegante.',
   },
   {
-    id: 'p-018', name: 'Rinonera Crossbody', brand: 'AdStore Basics', category: 'Accesorios',
+    id: 'p-018', name: 'Rinonera Crossbody', brand: 'AD Basics', category: 'Accesorios',
     price: 34990, availability: 'stock',
     sizes: ['Unico'], stock: { Unico: 20 },
     image: img('1553545204-4f7d339aa06a'),

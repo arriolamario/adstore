@@ -6,7 +6,7 @@ export default function AdminLayout() {
       <div className="container">
         <div className="section-head" style={{ marginBottom: 'var(--space-6)' }}>
           <span className="eyebrow">Panel de administracion</span>
-          <h1 className="section-title">Gestion de AdStore</h1>
+          <h1 className="section-title">Gestion de AD Moda & Confort</h1>
         </div>
 
         <div className="admin">

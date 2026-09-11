@@ -1,4 +1,4 @@
-# AdStore
+# AD Moda & Confort
 
 Tienda premium de calzado y ropa construida con **React + Vite** para el frontend
 y una **API Express + PostgreSQL (Neon)** para los datos. La landing esta orientada

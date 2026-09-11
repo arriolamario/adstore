@@ -1,4 +1,4 @@
-/* Cliente HTTP minimalista para la API de AdStore.
+/* Cliente HTTP minimalista para la API de AD Moda & Confort.
    En dev, Vite proxea /api -> http://localhost:3001 (ver vite.config.js). */
 
 async function request(url, options = {}) {

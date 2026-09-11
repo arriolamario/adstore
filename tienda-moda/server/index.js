@@ -4,4 +4,4 @@ import app from './app.js'
 
 const PORT = process.env.PORT || 3001
 
-app.listen(PORT, () => console.log(`API AdStore escuchando en http://localhost:${PORT}`))
+app.listen(PORT, () => console.log(`API AD Moda & Confort escuchando en http://localhost:${PORT}`))

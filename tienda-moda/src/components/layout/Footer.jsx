@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <div className="navbar__brand" style={{ marginBottom: 'var(--space-3)' }}>
               <img className="navbar__logo" src="/logo.jpeg" alt="" />
-              <span>AdStore</span>
+              <span>AD Moda & Confort</span>
             </div>
             <p className="text-soft" style={{ fontSize: 'var(--fs-sm)', maxWidth: '32ch' }}>
               Calzado y ropa seleccionada. Reserva online y recibi en tu casa o retira por el local.
@@ -38,7 +38,7 @@ export default function Footer() {
         </div>
 
         <div className="footer__bottom">
-          <span>© {new Date().getFullYear()} AdStore. Todos los derechos reservados.</span>
+          <span>© {new Date().getFullYear()} AD Moda & Confort. Todos los derechos reservados.</span>
           <span>Hecho con React + Vite</span>
         </div>
       </div>

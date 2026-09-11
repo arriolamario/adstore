@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="container navbar__inner">
         <Link to="/" className="navbar__brand" onClick={() => setOpen(false)}>
           <img className="navbar__logo" src="/logo.jpeg" alt="" />
-          <span>AdStore</span>
+          <span>AD Moda</span>
         </Link>
 
         <nav className="navbar__links">

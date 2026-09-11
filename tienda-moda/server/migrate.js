@@ -7,7 +7,7 @@ import { SEED_PRODUCTS } from '../src/data/products.js'
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8')
 
 const ADMIN = {
-  name: 'Equipo AdStore',
+  name: 'Equipo AD Moda & Confort',
   email: 'admin@adstore.com',
   password: 'admin123',
   role: 'admin',

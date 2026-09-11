@@ -1,4 +1,4 @@
--- AdStore — esquema. server/migrate.js ejecuta este archivo (DROP + CREATE) y luego siembra datos.
+-- AD Moda & Confort — esquema. server/migrate.js ejecuta este archivo (DROP + CREATE) y luego siembra datos.
 
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
