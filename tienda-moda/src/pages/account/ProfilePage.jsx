@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Button from '../../components/ui/Button'
 import Field from '../../components/ui/Field'
+import { sanitizePhone } from '../../lib/validation'
 import { useAuth } from '../../context/AuthContext'
 
 export default function ProfilePage() {
@@ -15,6 +16,11 @@ export default function ProfilePage() {
 
   const set = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }))
+    setSaved(false)
+  }
+
+  const setPhone = (e) => {
+    setForm((f) => ({ ...f, phone: sanitizePhone(e.target.value) }))
     setSaved(false)
   }
 
@@ -39,7 +45,18 @@ export default function ProfilePage() {
         <Field label="Email" type="email" name="email" value={form.email} onChange={set('email')} required />
       </div>
       <div className="form-row">
-        <Field label="Telefono" name="phone" value={form.phone} onChange={set('phone')} placeholder="+54 11 5555 5555" />
+        <Field
+          label="Telefono"
+          name="phone"
+          type="tel"
+          inputMode="numeric"
+          pattern="\d*"
+          maxLength={15}
+          value={form.phone}
+          onChange={setPhone}
+          placeholder="Solo numeros"
+          hint="Sin espacios ni guiones, solo digitos."
+        />
         <Field label="Direccion" name="address" value={form.address} onChange={set('address')} placeholder="Calle, numero, ciudad" />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>

@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Field from '../components/ui/Field'
 import EmptyState from '../components/ui/EmptyState'
 import { currency, formatDate } from '../lib/format'
+import { sanitizePhone, isValidPhone } from '../lib/validation'
 import { useCart } from '../context/CartContext'
 import { useCatalog } from '../context/CatalogContext'
 import { useAuth } from '../context/AuthContext'
@@ -26,6 +27,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const setPhone = (e) => setForm((f) => ({ ...f, phone: sanitizePhone(e.target.value) }))
 
   if (done) {
     return (
@@ -62,6 +64,10 @@ export default function CheckoutPage() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!isValidPhone(form.phone)) {
+      setError('Ingresa un telefono valido (solo numeros, entre 8 y 15 digitos).')
+      return
+    }
     setSubmitting(true)
     try {
       // El servidor descuenta el stock por talle en una transaccion.
@@ -105,7 +111,19 @@ export default function CheckoutPage() {
             <h3 style={{ marginBottom: 'var(--space-4)' }}>Tus datos</h3>
             <div className="form-row">
               <Field label="Nombre y apellido" name="name" value={form.name} onChange={set('name')} required />
-              <Field label="Telefono" name="phone" value={form.phone} onChange={set('phone')} required />
+              <Field
+                label="Telefono"
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                pattern="\d*"
+                maxLength={15}
+                value={form.phone}
+                onChange={setPhone}
+                placeholder="Solo numeros"
+                hint="Sin espacios ni guiones, solo digitos."
+                required
+              />
             </div>
             {fulfillment === 'shipping' && (
               <Field label="Direccion de envio" name="address" value={form.address} onChange={set('address')} required />

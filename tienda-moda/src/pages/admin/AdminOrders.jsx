@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../../components/ui/EmptyState'
+import OrderDetailModal from '../../components/orders/OrderDetailModal'
 import { currency, formatDate } from '../../lib/format'
 import { ORDER_STATUSES, statusMeta } from '../../lib/orders'
 import { useCart } from '../../context/CartContext'
@@ -9,6 +10,7 @@ export default function AdminOrders() {
   const { orders, updateOrderStatus, loadOrders, ordersLoading } = useCart()
   const { refresh } = useCatalog()
   const [filter, setFilter] = useState('all')
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => { loadOrders() }, [loadOrders])
 
@@ -77,8 +79,10 @@ export default function AdminOrders() {
                   <div>{o.customer?.name || '—'}</div>
                   <div className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}>{o.customer?.phone}</div>
                 </td>
-                <td title={o.items.map((i) => `${i.qty}x ${i.name} (${i.size})`).join('\n')}>
-                  {o.items.reduce((n, i) => n + i.qty, 0)} u.
+                <td>
+                  <button className="btn btn--ghost btn--sm" onClick={() => setSelected(o)}>
+                    {o.items.reduce((n, i) => n + i.qty, 0)} u. · Ver detalle
+                  </button>
                 </td>
                 <td>{o.fulfillment === 'pickup' ? 'Retiro' : 'Envio'}</td>
                 <td>{currency(o.subtotal)}</td>
@@ -105,6 +109,8 @@ export default function AdminOrders() {
           </tbody>
         </table>
       </div>
+
+      <OrderDetailModal order={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

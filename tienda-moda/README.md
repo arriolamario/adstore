@@ -8,6 +8,14 @@ Persisten en la base: usuarios, productos (con stock por talle) y reservas.
 El carrito de compra (borrador antes de confirmar) sigue viviendo en el
 `localStorage` del navegador — es intencional, evita crear filas por cada click.
 
+## Documentacion
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — patron de diseno, estructura de carpetas
+  y cuando conviene escalarla.
+- [TESTING.md](TESTING.md) — como correr los tests y que cubren.
+- [CHANGELOG.md](CHANGELOG.md) — registro de cambios notables, actualizado en
+  cada cambio con logica relevante.
+
 ## Deploy en Vercel
 
 El repo ya trae [vercel.json](vercel.json) y [api/index.js](api/index.js) (la API
@@ -50,6 +58,8 @@ npm run dev:web    # solo el frontend (Vite)
 npm run db:reset   # DROP + CREATE de las tablas y siembra el catalogo + admin
 npm run build      # build de produccion del frontend en /dist
 npm run start      # sirve la API + el build de /dist (produccion simple)
+npm test           # corre la suite de tests (Vitest) una vez
+npm run test:watch # tests en modo watch
 ```
 
 ## Usuarios de prueba
@@ -82,35 +92,46 @@ api/
 └── index.js      # funcion serverless de Vercel: reexporta server/app.js
 
 server/
-├── db.js         # pool de conexion a Postgres (Neon)
+├── db.js         # pool de conexion a Postgres (Neon) + helper de transacciones
+├── lib/          # http.js (wrap/fail), mappers.js (DB -> shape del frontend)
+├── routes/       # un router por recurso: products, auth, users, orders
 ├── schema.sql    # DROP + CREATE de users / products / orders
 ├── migrate.js    # corre schema.sql y siembra catalogo + admin (npm run db:reset)
-├── app.js        # la app Express (todas las rutas /api/*)
+├── app.js        # composition root: crea la app Express y monta los routers
 └── index.js      # entry point local: levanta app.js con app.listen (npm start)
 
 src/
 ├── main.jsx                # providers + router
 ├── App.jsx                 # definicion de rutas + layout
+├── test/setup.js           # setup de Vitest (matchers de jest-dom)
 ├── styles/
 │   ├── theme.css           # ← TOKENS: colores, espaciados, tipografia, radios, sombras
 │   ├── components.css      # estilos por componente (todos usan los tokens)
 │   └── global.css          # reset + helpers de layout
-├── data/products.js        # catalogo semilla (stock / a pedido)
-├── context/                # AuthContext, CatalogContext, CartContext
+├── data/products.js        # catalogo semilla (stock / a pedido), la reusa el backend
+├── context/                # AuthContext, CatalogContext, CartContext (+ tests)
 ├── hooks/useLocalStorage.js
-├── lib/format.js           # moneda, fechas, dias habiles
+├── lib/                    # funciones puras + cliente HTTP (cada una con su .test.js)
+│   ├── api.js                 # unico punto de contacto con /api/*
+│   ├── inventory.js            # stock por talle
+│   ├── orders.js                # estados de reserva
+│   ├── validation.js             # sanitizadores/validadores de formularios
+│   └── format.js                  # moneda, fechas, dias habiles, slugs
 ├── components/
 │   ├── layout/             # Navbar, Footer
 │   ├── ui/                 # Button, Badge, Field, Modal, Pagination, EmptyState
 │   ├── home/               # Hero, TrustBar, HowItWorks, CTASection
-│   ├── catalog/            # CatalogExplorer, Filters, ProductCard
-│   └── cart/CartDrawer.jsx
+│   ├── catalog/            # CatalogExplorer, Filters, ProductCard, QuickReserveModal
+│   ├── cart/                # CartDrawer
+│   └── orders/               # OrderDetailModal (compartido por admin y reportes)
 └── pages/
     ├── HomePage / CatalogPage / ProductPage / CheckoutPage
     ├── LoginPage / RegisterPage
     ├── account/            # AccountLayout, OrdersPage, ProfilePage
-    └── admin/              # AdminLayout, AdminProducts, AdminProductForm, AdminReports
+    └── admin/              # AdminLayout, AdminProducts, AdminProductForm, AdminOrders, AdminReports
 ```
+
+Ver [ARCHITECTURE.md](ARCHITECTURE.md) para el detalle del patron y como escalarlo.
 
 ## Como iterar el diseno
 

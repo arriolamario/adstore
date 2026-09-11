@@ -1,11 +1,13 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../../components/ui/EmptyState'
+import OrderDetailModal from '../../components/orders/OrderDetailModal'
 import { currency, formatDate } from '../../lib/format'
 import { statusMeta } from '../../lib/orders'
 import { useCart } from '../../context/CartContext'
 
 export default function AdminReports() {
   const { orders, loadOrders, ordersLoading } = useCart()
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => { loadOrders() }, [loadOrders])
 
@@ -82,7 +84,7 @@ export default function AdminReports() {
       <div className="table-wrap">
         <table className="data">
           <thead>
-            <tr><th>Codigo</th><th>Fecha</th><th>Cliente</th><th>Entrega</th><th>Estado</th><th>Total</th></tr>
+            <tr><th>Codigo</th><th>Fecha</th><th>Cliente</th><th>Entrega</th><th>Estado</th><th>Total</th><th></th></tr>
           </thead>
           <tbody>
             {orders.map((o) => (
@@ -93,11 +95,16 @@ export default function AdminReports() {
                 <td>{o.fulfillment === 'pickup' ? 'Retiro' : 'Envio'}</td>
                 <td><span className={`badge badge--${statusMeta(o.status).tone}`}>{statusMeta(o.status).label}</span></td>
                 <td>{currency(o.subtotal)}</td>
+                <td>
+                  <button className="btn btn--ghost btn--sm" onClick={() => setSelected(o)}>Ver detalle</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <OrderDetailModal order={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }
