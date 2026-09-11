@@ -19,7 +19,7 @@ export default function Navbar() {
     <header className="navbar">
       <div className="container navbar__inner">
         <Link to="/" className="navbar__brand" onClick={() => setOpen(false)}>
-          <span className="navbar__logo">A</span>
+          <img className="navbar__logo" src="/logo.jpeg" alt="" />
           <span>AdStore</span>
         </Link>
 

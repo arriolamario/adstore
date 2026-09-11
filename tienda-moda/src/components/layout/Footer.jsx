@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer__grid">
           <div>
             <div className="navbar__brand" style={{ marginBottom: 'var(--space-3)' }}>
-              <span className="navbar__logo">A</span>
+              <img className="navbar__logo" src="/logo.jpeg" alt="" />
               <span>AdStore</span>
             </div>
             <p className="text-soft" style={{ fontSize: 'var(--fs-sm)', maxWidth: '32ch' }}>

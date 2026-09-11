@@ -102,9 +102,8 @@
 }
 .navbar__brand { display: flex; align-items: center; gap: var(--space-2); font-weight: 800; font-size: var(--fs-lg); }
 .navbar__logo {
-  width: 30px; height: 30px; border-radius: 9px;
-  background: linear-gradient(135deg, var(--brand-600), var(--accent-500));
-  display: grid; place-items: center; color: #fff; font-weight: 800;
+  width: 32px; height: 32px; border-radius: var(--radius-pill);
+  object-fit: cover; box-shadow: 0 0 0 1px var(--border);
 }
 .navbar__links { display: flex; gap: var(--space-5); margin-left: var(--space-4); }
 .navbar__links a { font-size: var(--fs-sm); font-weight: 500; color: var(--text-soft); }
@@ -142,7 +141,7 @@
   padding-block: var(--space-9);
   background:
     radial-gradient(60% 60% at 15% 10%, var(--brand-50), transparent 60%),
-    radial-gradient(50% 50% at 90% 20%, #ecfeff, transparent 55%);
+    radial-gradient(50% 50% at 90% 20%, #fdf3e0, transparent 55%);
 }
 .hero__grid {
   display: grid;

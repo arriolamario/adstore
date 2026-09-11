@@ -5,27 +5,29 @@
    ========================================================= */
 
 :root {
-  /* ---- Paleta de marca ---- */
-  --brand-50:  #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-300: #a5b4fc;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
+  /* ---- Paleta de marca ----
+     Tomada del logo (AD Moda & Confort): blush pink, crema, marron/bordo
+     del isotipo y dorado del subtitulo. */
+  --brand-50:  #fdf0ec;
+  --brand-100: #f8d9cf;
+  --brand-300: #e8ac97;
+  --brand-500: #cf8368;
+  --brand-600: #a8583f;
+  --brand-700: #854432;
 
-  --accent-500: #06b6d4;
+  --accent-500: #c9974b;
 
   /* ---- Superficies y texto ---- */
-  --bg:            #ffffff;
-  --bg-subtle:     #f8fafc;
-  --bg-muted:      #f1f5f9;
+  --bg:            #fffaf6;
+  --bg-subtle:     #fbeee2;
+  --bg-muted:      #f5e2d1;
   --surface:       #ffffff;
-  --border:        #e5e7eb;
-  --border-strong: #d1d5db;
+  --border:        #efdccb;
+  --border-strong: #e0c1a8;
 
-  --text:          #0f172a;
-  --text-soft:     #475569;
-  --text-muted:    #94a3b8;
+  --text:          #2e1a15;
+  --text-soft:     #6b4b3d;
+  --text-muted:    #a68b7c;
   --text-invert:   #ffffff;
 
   /* ---- Estados ---- */
@@ -72,11 +74,11 @@
   --radius-lg: 22px;
   --radius-pill: 999px;
 
-  /* ---- Sombras ---- */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.10);
-  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.16);
+  /* ---- Sombras (tinte calido, a tono con --text) ---- */
+  --shadow-xs: 0 1px 2px rgba(46, 26, 21, 0.06);
+  --shadow-sm: 0 2px 8px rgba(46, 26, 21, 0.07);
+  --shadow-md: 0 10px 30px rgba(46, 26, 21, 0.12);
+  --shadow-lg: 0 24px 60px rgba(46, 26, 21, 0.18);
 
   /* ---- Movimiento ---- */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
