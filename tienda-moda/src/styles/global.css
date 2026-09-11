@@ -1,0 +1,98 @@
+@import "./theme.css";
+@import "./components.css";
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+* { margin: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img, svg { display: block; max-width: 100%; }
+
+a { color: inherit; text-decoration: none; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+h1, h2, h3, h4 { line-height: var(--lh-tight); font-weight: 700; letter-spacing: -0.02em; }
+
+:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection { background: var(--brand-100); }
+
+/* ---------- Layout helpers ---------- */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+.container--narrow { max-width: var(--container-narrow); }
+
+.section { padding-block: var(--space-9); }
+.section--tight { padding-block: var(--space-7); }
+
+.stack { display: flex; flex-direction: column; }
+.stack > * + * { margin-top: var(--space-4); }
+
+.page { min-height: 60vh; padding-block: var(--space-8); }
+
+.eyebrow {
+  display: inline-block;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+  margin-bottom: var(--space-3);
+}
+
+.section-title { font-size: var(--fs-3xl); }
+.section-lead {
+  margin-top: var(--space-3);
+  color: var(--text-soft);
+  font-size: var(--fs-lg);
+  max-width: 52ch;
+}
+.section-head { margin-bottom: var(--space-7); }
+.section-head--center { text-align: center; }
+.section-head--center .section-lead { margin-inline: auto; }
+
+.text-soft { color: var(--text-soft); }
+.text-muted { color: var(--text-muted); }
+
+.grid { display: grid; gap: var(--space-5); }
+
+/* fade-in al montar */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-in { animation: fade-up var(--dur) var(--ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+}
+
+@media (max-width: 640px) {
+  :root { --fs-3xl: 1.9rem; --fs-4xl: 2.25rem; --fs-5xl: 2.5rem; }
+  .section { padding-block: var(--space-7); }
+}

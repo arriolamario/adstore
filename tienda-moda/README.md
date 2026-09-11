@@ -1,56 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AdStore
 
-## Getting Started
+Tienda premium de calzado y ropa construida con **React + Vite** para el frontend
+y una **API Express + PostgreSQL (Neon)** para los datos. La landing esta orientada
+a que el visitante **reserve productos** para envio a domicilio o retiro en el local.
 
-First, run the development server:
+Persisten en la base: usuarios, productos (con stock por talle) y reservas.
+El carrito de compra (borrador antes de confirmar) sigue viviendo en el
+`localStorage` del navegador — es intencional, evita crear filas por cada click.
+
+## Levantar en local
+
+1. Copia `.env.example` a `.env` y completa `DATABASE_URL` con tu cadena de Postgres
+   (ya viene configurado para el Neon del proyecto).
+2. Instala dependencias y prepara la base (esto **borra y recrea** las tablas):
+
+```bash
+npm install
+npm run db:reset
+```
+
+3. Levanta API + frontend juntos:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre http://localhost:5173 (el frontend llama a `/api/*`, que Vite proxea a la
+API en `http://localhost:3001`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Otros scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Producción con Vercel, Neon y Cloudinary
-
-1. Subí este proyecto a GitHub. `.env` está excluido por `.gitignore`.
-2. Importá el repositorio en Vercel con el plan Hobby.
-3. Configurá estas variables en Vercel:
-	- `DATABASE_URL`: connection string pooled de Neon.
-	- `AUTH_SECRET`: secreto largo y aleatorio.
-	- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: Cloud name de Cloudinary.
-	- `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`: preset unsigned de imágenes.
-4. Desde una terminal local con `DATABASE_URL` de producción ejecutá `npm run db:push` y `npm run db:seed`.
-5. Promové tu usuario a administrador ejecutando en Neon:
-
-```sql
-UPDATE "User" SET role = 'ADMIN' WHERE email = 'tu-email@example.com';
+```bash
+npm run dev:api    # solo la API (puerto 3001)
+npm run dev:web    # solo el frontend (Vite)
+npm run db:reset   # DROP + CREATE de las tablas y siembra el catalogo + admin
+npm run build      # build de produccion del frontend en /dist
+npm run start      # sirve la API + el build de /dist (produccion simple)
 ```
 
-6. Verificá en producción registro, login, carga de imágenes, reservas, comprobantes y el panel `/admin`.
+## Usuarios de prueba
 
-No publiques valores reales de `.env` ni reutilices credenciales que hayan sido compartidas en conversaciones o capturas.
+| Rol       | Email                | Password   |
+|-----------|----------------------|------------|
+| Admin     | `admin@adstore.com`  | `admin123` |
+| Comprador | se crea en /registro | —          |
+
+- **Comprador**: agrega productos al carrito eligiendo talle (modal de vista rapida).
+  Para **confirmar** la reserva se le pide crear cuenta / ingresar y luego vuelve
+  al checkout con el carrito intacto. Checkout con envio o retiro, historial de
+  pedidos con estado y edicion de perfil.
+- **Admin**: `/admin` → alta/baja/edicion de stock **por talle**, carga de imagenes
+  por producto (archivo o URL), **Reservas** (cambiar el estado de cada reserva) y
+  reporte de ventas.
+
+### Stock y estados de reserva
+
+- Al **confirmar** una reserva se descuenta el stock por talle de los productos
+  "en stock" (los productos "a pedido" no tienen tope).
+- Estados: `Reservado → En preparacion → Listo → Entregado`, o `Cancelado`.
+  El admin los cambia desde `/admin/reservas`. Cancelar **repone** el stock;
+  reactivar una cancelada lo vuelve a descontar.
+
+## Estructura
+
+```
+server/
+├── db.js         # pool de conexion a Postgres (Neon)
+├── schema.sql    # DROP + CREATE de users / products / orders
+├── migrate.js    # corre schema.sql y siembra catalogo + admin (npm run db:reset)
+└── index.js      # API Express (productos, auth, usuarios, reservas)
+
+src/
+├── main.jsx                # providers + router
+├── App.jsx                 # definicion de rutas + layout
+├── styles/
+│   ├── theme.css           # ← TOKENS: colores, espaciados, tipografia, radios, sombras
+│   ├── components.css      # estilos por componente (todos usan los tokens)
+│   └── global.css          # reset + helpers de layout
+├── data/products.js        # catalogo semilla (stock / a pedido)
+├── context/                # AuthContext, CatalogContext, CartContext
+├── hooks/useLocalStorage.js
+├── lib/format.js           # moneda, fechas, dias habiles
+├── components/
+│   ├── layout/             # Navbar, Footer
+│   ├── ui/                 # Button, Badge, Field, Modal, Pagination, EmptyState
+│   ├── home/               # Hero, TrustBar, HowItWorks, CTASection
+│   ├── catalog/            # CatalogExplorer, Filters, ProductCard
+│   └── cart/CartDrawer.jsx
+└── pages/
+    ├── HomePage / CatalogPage / ProductPage / CheckoutPage
+    ├── LoginPage / RegisterPage
+    ├── account/            # AccountLayout, OrdersPage, ProfilePage
+    └── admin/              # AdminLayout, AdminProducts, AdminProductForm, AdminReports
+```
+
+## Como iterar el diseno
+
+1. **Colores, tipografia, espaciados, radios y sombras** → `src/styles/theme.css`.
+   Cambia una variable y se propaga a toda la app.
+2. **Layout / spacing de un bloque puntual** → clase correspondiente en
+   `src/styles/components.css` (agrupado por seccion con comentarios).
+3. **Contenido del catalogo** → `src/data/products.js` (o desde `/admin`).
+4. Los breakpoints estan en `640 / 860 / 900 px`; se ajustan en cada bloque.
+
+Para reiniciar los datos: borra el `localStorage` del sitio o usa
+"Restaurar catalogo" en el panel de admin.
