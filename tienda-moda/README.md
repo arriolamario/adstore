@@ -8,6 +8,20 @@ Persisten en la base: usuarios, productos (con stock por talle) y reservas.
 El carrito de compra (borrador antes de confirmar) sigue viviendo en el
 `localStorage` del navegador — es intencional, evita crear filas por cada click.
 
+## Deploy en Vercel
+
+El repo ya trae [vercel.json](vercel.json) y [api/index.js](api/index.js) (la API
+Express corre como funcion serverless). Para que el deploy funcione hay que
+configurar en el proyecto de Vercel (Settings del proyecto, no en el codigo):
+
+1. **Root Directory**: la carpeta donde vive este `package.json` (p. ej. `tienda-moda`
+   si el repo tiene varios proyectos).
+2. **Framework Preset**: `Vite` (o `Other`) — si quedo en `Next.js` de un proyecto
+   anterior, el build falla porque intenta correr `next build`.
+3. **Environment Variables**: agregar `DATABASE_URL` con la cadena de conexion a
+   Postgres (Production y Preview). El `.env` local nunca se sube al repo.
+4. Volver a desplegar (Redeploy) despues de guardar esos cambios.
+
 ## Levantar en local
 
 1. Copia `.env.example` a `.env` y completa `DATABASE_URL` con tu cadena de Postgres
@@ -64,11 +78,15 @@ npm run start      # sirve la API + el build de /dist (produccion simple)
 ## Estructura
 
 ```
+api/
+└── index.js      # funcion serverless de Vercel: reexporta server/app.js
+
 server/
 ├── db.js         # pool de conexion a Postgres (Neon)
 ├── schema.sql    # DROP + CREATE de users / products / orders
 ├── migrate.js    # corre schema.sql y siembra catalogo + admin (npm run db:reset)
-└── index.js      # API Express (productos, auth, usuarios, reservas)
+├── app.js        # la app Express (todas las rutas /api/*)
+└── index.js      # entry point local: levanta app.js con app.listen (npm start)
 
 src/
 ├── main.jsx                # providers + router
