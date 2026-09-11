@@ -4,6 +4,40 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-11 (noche)
+
+### Agregado
+- **Autenticacion real en el servidor**: sesion como JWT en una cookie
+  `httpOnly` (`server/lib/auth.js`), en vez de confiar en lo que el cliente
+  dijera ser. Nuevos endpoints `GET /api/auth/me` y `POST /api/auth/logout`.
+- Middlewares `requireAuth`, `requireAdmin`, `requireSelfOrAdmin` aplicados
+  a **todas** las rutas sensibles: mutaciones de productos, todo el CRUD de
+  usuarios, crear/listar/cambiar-estado de reservas.
+- El dueno de una reserva pasa a ser siempre `req.user.id` (de la sesion),
+  nunca el `userId` que mande el body — cierra el hueco de poder crear una
+  reserva "a nombre de" otro usuario.
+- Un comprador que intenta ponerse `role: "admin"` en su propio perfil ya
+  no lo logra (el servidor ignora ese campo salvo que quien pide el cambio
+  ya sea admin).
+- `AuthContext` valida la sesion contra `GET /api/auth/me` al cargar la app
+  en vez de confiar en `localStorage` (que ya no guarda la sesion).
+  `ProtectedRoute` espera esa validacion antes de decidir si redirige.
+- 26 tests de integracion nuevos/reescritos que prueban la autorizacion en
+  si misma (no solo el "happy path"): acceso sin sesion, acceso con el rol
+  equivocado, intento de spoofear el dueno de una reserva, intento de
+  auto-promocion de rol.
+
+### Cambiado
+- Nueva variable de entorno obligatoria: `JWT_SECRET` (en `.env`, `.env.test`
+  y — **hay que agregarla a mano en Vercel** — Production/Preview). Sin ella
+  el servidor no arranca, mismo criterio que `DATABASE_URL`.
+
+### Documentado
+- `ARCHITECTURE.md` > "Seguridad" reemplaza la limitacion conocida anterior
+  por el detalle del modelo de auth real (que exige cada ruta, por que JWT
+  en cookie y no en localStorage, el trade-off de que el rol viaje dentro
+  del token).
+
 ## 2026-09-11 (aun mas tarde)
 
 ### Agregado

@@ -118,7 +118,7 @@ Para evitar dudas de "donde vive cada dato":
 | Reservas confirmadas | Postgres (`orders`) | Idem, y necesitan transacciones (stock) |
 | Usuarios | Postgres (`users`) | Idem |
 | Carrito (borrador, sin confirmar) | `localStorage` del navegador | Evita crear filas en la DB por cada click; se descarta o se confirma como reserva |
-| Sesion (usuario logueado) | `localStorage` del navegador | Solo dice "quien sos"; los datos reales estan en la DB |
+| Sesion (usuario logueado) | Cookie `httpOnly` firmada (JWT) | El servidor es quien decide quien sos; el JS del navegador no puede leerla ni falsificarla (ver "Seguridad" mas abajo) |
 
 ## Entornos y bases de datos
 
@@ -134,19 +134,42 @@ Tres bases de Postgres, cada una con un proposito distinto — nunca se mezclan:
 local no lo tiene configurado por defecto; Neon lo exige). Ver `TESTING.md`
 para el detalle de como los tests de integracion cargan `.env.test`.
 
-## Seguridad — limitacion conocida
+## Seguridad
 
-El backend **no verifica el rol en el servidor**. `/admin/*` en el frontend
-esta protegido por `ProtectedRoute` (oculta la UI si `user.role !== 'admin'`),
-pero las rutas de la API (`/api/products`, `/api/users`, `/api/orders/:id/status`...)
-responden a cualquiera que las llame directo, sin sesion ni token. Es
-aceptable para el estado actual del proyecto (demo/portfolio, sin datos de
-pago), pero **antes de manejar datos reales de usuarios habria que agregar
-autenticacion real en el servidor** (sesion con cookie firmada o JWT +
-middleware que valide `role === 'admin'` en cada ruta sensible, en particular
-`server/routes/users.routes.js` completo y las mutaciones de `products.routes.js`
-y `orders.routes.js`). No se implemento en esta iteracion para no introducir
-un sistema de auth nuevo sin que el usuario lo pida explicitamente.
+La sesion es un **JWT firmado en una cookie `httpOnly`** (`server/lib/auth.js`),
+no algo que el frontend guarde y mande por su cuenta. Eso significa:
+
+- El navegador la manda solo (misma-origin) en cada request; el JS de la
+  pagina **no puede leerla ni modificarla** — mitiga robo de sesion via XSS.
+- `sameSite: 'lax'` + que la API solo acepta `Content-Type: application/json`
+  mitiga CSRF (un `<form>` de otro sitio no puede disparar un POST JSON).
+- `secure: true` en Vercel (HTTPS), `false` en local (HTTP).
+- El rol viaja **adentro** del JWT: si un admin le cambia el rol a un
+  usuario, ese usuario lo ve reflejado recien la proxima vez que inicia
+  sesion (el token dura 7 dias). Es un trade-off aceptado por simplicidad
+  (evita mantener una tabla de sesiones); si hiciera falta invalidar antes,
+  la alternativa es guardar las sesiones en la base en vez de ser stateless.
+
+Cada ruta declara explicitamente que necesita, con los middlewares de
+`server/lib/auth.js`:
+
+| Middleware | Exige | Se usa en |
+|---|---|---|
+| (ninguno) | nada — publico | `GET /api/products`, `POST /api/auth/register`\|`login` |
+| `requireAuth` | sesion valida (cualquier rol) | `POST /api/orders` (el dueno es siempre `req.user.id`, nunca lo que mande el body), `GET /api/orders` (un comprador solo ve las propias) |
+| `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status` |
+| `requireSelfOrAdmin('id')` | sesion valida + (dueno del `:id` o admin) | `GET/PUT /api/users/:id` (tu perfil, o cualquiera si sos admin) |
+
+Un usuario normal que manda `role: "admin"` en su propio `PUT /api/users/:id`
+**no se auto-promueve**: el servidor solo deja tocar el campo `role` cuando
+quien hace el pedido ya es admin (`server/routes/users.routes.js`), sin
+importar que mande el body. Cubierto en `server/app.test.js`.
+
+**Variable de entorno obligatoria**: `JWT_SECRET` (junto a `DATABASE_URL`).
+Sin ella el servidor no arranca (falla rapido, mismo criterio que `db.js`).
+Tiene que estar en `.env` (local), `.env.test` (tests) y en las **Environment
+Variables del proyecto en Vercel** (produccion) — es una clave distinta en
+cada entorno, generada con `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 
 ## Deploy
 

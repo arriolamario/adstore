@@ -2,23 +2,29 @@ import { Router } from 'express'
 import { withTransaction, query } from '../db.js'
 import { wrap, fail } from '../lib/http.js'
 import { mapOrder } from '../lib/mappers.js'
+import { requireAuth, requireAdmin } from '../lib/auth.js'
 import { addBusinessDays, uid } from '../../src/lib/format.js'
 
 export const ordersRouter = Router()
 
 const ORDER_LEAD_DAYS = 5
 
-ordersRouter.get('/', wrap(async (req, res) => {
-  const { userId } = req.query
+// Un comprador solo ve sus propias reservas; el admin puede pedir todas o
+// filtrar por cualquier userId. El query param se ignora si no sos admin.
+ordersRouter.get('/', requireAuth, wrap(async (req, res) => {
+  const userId = req.user.role === 'admin' ? (req.query.userId || null) : req.user.id
   const { rows } = userId
     ? await query('SELECT * FROM orders WHERE user_id=$1 ORDER BY created_at DESC', [userId])
     : await query('SELECT * FROM orders ORDER BY created_at DESC')
   res.json(rows.map(mapOrder))
 }))
 
-// Crea la reserva y descuenta stock por talle (transaccional).
-ordersRouter.post('/', wrap(async (req, res) => {
-  const { userId, fulfillment, customer, items } = req.body
+// Crea la reserva y descuenta stock por talle (transaccional). El dueno de
+// la reserva es siempre el usuario de la sesion, nunca lo que mande el body
+// (evita que alguien cree una reserva a nombre de otro usuario).
+ordersRouter.post('/', requireAuth, wrap(async (req, res) => {
+  const { fulfillment, customer, items } = req.body
+  const userId = req.user.id
   if (!Array.isArray(items) || items.length === 0) throw fail(400, 'La reserva no tiene items')
 
   const order = await withTransaction(async (client) => {
@@ -42,7 +48,7 @@ ordersRouter.post('/', wrap(async (req, res) => {
       `INSERT INTO orders (id, user_id, status, fulfillment, customer, items, subtotal, estimated_ready_at)
        VALUES ($1,$2,'reservado',$3,$4::jsonb,$5::jsonb,$6,$7)
        RETURNING *`,
-      [id, userId || null, fulfillment || 'pickup', JSON.stringify(customer || {}),
+      [id, userId, fulfillment || 'pickup', JSON.stringify(customer || {}),
         JSON.stringify(items), subtotal, estimated.toISOString()],
     )
     return rows[0]
@@ -52,7 +58,7 @@ ordersRouter.post('/', wrap(async (req, res) => {
 }))
 
 // Cambia el estado. Al cancelar repone stock; al reactivar una cancelada lo vuelve a descontar.
-ordersRouter.patch('/:id/status', wrap(async (req, res) => {
+ordersRouter.patch('/:id/status', requireAdmin, wrap(async (req, res) => {
   const { status } = req.body
   const order = await withTransaction(async (client) => {
     const { rows } = await client.query('SELECT * FROM orders WHERE id=$1 FOR UPDATE', [req.params.id])

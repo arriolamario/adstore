@@ -1,17 +1,20 @@
 import { Router } from 'express'
 import { query, withTransaction } from '../db.js'
 import { wrap } from '../lib/http.js'
+import { requireAdmin } from '../lib/auth.js'
 import { SEED_PRODUCTS } from '../../src/data/products.js'
 import { uid } from '../../src/lib/format.js'
 
 export const productsRouter = Router()
 
+// El catalogo es publico (cualquiera puede navegarlo sin loguearse).
 productsRouter.get('/', wrap(async (_req, res) => {
   const { rows } = await query('SELECT * FROM products ORDER BY created_at DESC')
   res.json(rows)
 }))
 
-productsRouter.post('/', wrap(async (req, res) => {
+// Todo lo que modifica el catalogo requiere ser admin.
+productsRouter.post('/', requireAdmin, wrap(async (req, res) => {
   const p = req.body
   const id = p.id || `p-${uid()}`
   const { rows } = await query(
@@ -24,7 +27,7 @@ productsRouter.post('/', wrap(async (req, res) => {
   res.status(201).json(rows[0])
 }))
 
-productsRouter.put('/:id', wrap(async (req, res) => {
+productsRouter.put('/:id', requireAdmin, wrap(async (req, res) => {
   const p = req.body
   const { rows } = await query(
     `UPDATE products SET name=$2, brand=$3, category=$4, price=$5, availability=$6,
@@ -37,13 +40,13 @@ productsRouter.put('/:id', wrap(async (req, res) => {
   res.json(rows[0])
 }))
 
-productsRouter.delete('/:id', wrap(async (req, res) => {
+productsRouter.delete('/:id', requireAdmin, wrap(async (req, res) => {
   await query('DELETE FROM products WHERE id=$1', [req.params.id])
   res.json({ ok: true })
 }))
 
 // Restaura el catalogo semilla (borra todos los productos y vuelve a cargarlos).
-productsRouter.post('/reset', wrap(async (_req, res) => {
+productsRouter.post('/reset', requireAdmin, wrap(async (_req, res) => {
   await withTransaction(async (client) => {
     await client.query('DELETE FROM products')
     for (const p of SEED_PRODUCTS) {

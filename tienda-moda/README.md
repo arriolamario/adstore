@@ -26,8 +26,10 @@ configurar en el proyecto de Vercel (Settings del proyecto, no en el codigo):
    si el repo tiene varios proyectos).
 2. **Framework Preset**: `Vite` (o `Other`) — si quedo en `Next.js` de un proyecto
    anterior, el build falla porque intenta correr `next build`.
-3. **Environment Variables**: agregar `DATABASE_URL` con la cadena de conexion a
-   Postgres (Production y Preview). El `.env` local nunca se sube al repo.
+3. **Environment Variables**: agregar `DATABASE_URL` (cadena de conexion a
+   Postgres) y **`JWT_SECRET`** (clave para firmar las cookies de sesion —
+   ver "Autenticacion" mas abajo) para Production y Preview. El `.env` local
+   nunca se sube al repo. **Sin `JWT_SECRET` el servidor no arranca.**
 4. Volver a desplegar (Redeploy) despues de guardar esos cambios.
 
 ## Base de datos local
@@ -82,6 +84,19 @@ npm run start          # sirve la API + el build de /dist (produccion simple)
 npm test               # tests unitarios (Vitest), no tocan la base
 npm run test:watch     # tests unitarios en modo watch
 npm run test:integration  # tests de integracion contra adstore_test (API real por HTTP)
+```
+
+## Autenticacion
+
+La sesion es una **cookie `httpOnly` firmada (JWT)**, no algo que quede
+expuesto en `localStorage` — el servidor verifica la sesion y el rol en
+**cada** ruta sensible (no solo en la pantalla, como pasaba antes). Detalle
+completo en [ARCHITECTURE.md](ARCHITECTURE.md#seguridad).
+
+Requiere la variable `JWT_SECRET` (ver `.env.example`). Generar una propia:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
 ## Usuarios de prueba

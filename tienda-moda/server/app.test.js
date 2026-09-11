@@ -6,6 +6,7 @@
 // no necesita una base levantada) — usar `npm run test:integration`.
 import { readFileSync } from 'node:fs'
 import dotenv from 'dotenv'
+import bcrypt from 'bcryptjs'
 import request from 'supertest'
 import { beforeAll, afterAll, describe, it, expect } from 'vitest'
 
@@ -14,53 +15,60 @@ dotenv.config({ path: '.env.test', override: true })
 let app
 let pool
 
+// Un admin ya cargado en la base (simulando el que siembra migrate.js) y un
+// comprador registrado por la API. Cada uno con su propio "agent" de
+// supertest, que persiste la cookie de sesion entre requests — asi se
+// prueba el flujo real (login una vez, despues cada pedido va autenticado).
+let adminAgent
+let customerAgent
+let customerId
+
 beforeAll(async () => {
   ;({ pool } = await import('./db.js'))
   const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8')
   await pool.query(schema) // DROP + CREATE: cada corrida arranca de una base limpia
   ;({ default: app } = await import('./app.js'))
+
+  // Un admin no se puede crear via API (a proposito): se siembra directo en
+  // la base, igual que hace server/migrate.js en un entorno real.
+  const hash = bcrypt.hashSync('admin123', 10)
+  await pool.query(
+    `INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,'admin')`,
+    ['Admin Test', 'admin@test.local', hash],
+  )
+  adminAgent = request.agent(app)
+  await adminAgent.post('/api/auth/login').send({ email: 'admin@test.local', password: 'admin123' })
+
+  customerAgent = request.agent(app)
+  const custEmail = `cliente-${Date.now()}@example.com`
+  const reg = await customerAgent.post('/api/auth/register').send({ name: 'Cliente Test', email: custEmail, password: 'secret123' })
+  customerId = reg.body.id
 })
 
 afterAll(async () => {
   await pool.end()
 })
 
-describe('API productos', () => {
-  it('POST crea un producto y GET lo devuelve en el listado', async () => {
-    const create = await request(app).post('/api/products').send({
-      name: 'Test Shoe', brand: 'Test', category: 'Zapatillas', price: 1000,
-      availability: 'stock', sizes: ['40'], stock: { 40: 3 }, image: '', description: '',
-    })
-    expect(create.status).toBe(201)
-    expect(create.body.name).toBe('Test Shoe')
-
-    const list = await request(app).get('/api/products')
-    expect(list.status).toBe(200)
-    expect(list.body.some((p) => p.id === create.body.id)).toBe(true)
+describe('Auth: sesion via cookie', () => {
+  it('login/registro dejan una sesion valida (GET /me funciona)', async () => {
+    const me = await customerAgent.get('/api/auth/me')
+    expect(me.status).toBe(200)
+    expect(me.body.id).toBe(customerId)
   })
 
-  it('DELETE elimina el producto', async () => {
-    const create = await request(app).post('/api/products').send({
-      name: 'Borrame', brand: 'Test', category: 'Ropa', price: 1, availability: 'stock', sizes: [], stock: {},
-    })
-    const del = await request(app).delete(`/api/products/${create.body.id}`)
-    expect(del.status).toBe(200)
-
-    const list = await request(app).get('/api/products')
-    expect(list.body.some((p) => p.id === create.body.id)).toBe(false)
+  it('sin cookie, /me devuelve 401', async () => {
+    const res = await request(app).get('/api/auth/me')
+    expect(res.status).toBe(401)
   })
-})
 
-describe('API auth', () => {
-  it('registra y loguea un usuario nuevo', async () => {
-    const email = `test-${Date.now()}@example.com`
-    const reg = await request(app).post('/api/auth/register').send({ name: 'Test User', email, password: 'secret123' })
-    expect(reg.status).toBe(201)
-    expect(reg.body.password).toBeUndefined() // nunca se devuelve el hash
+  it('logout invalida la sesion (siguiente /me da 401)', async () => {
+    const agent = request.agent(app)
+    const email = `logout-${Date.now()}@example.com`
+    await agent.post('/api/auth/register').send({ name: 'Logout Test', email, password: 'secret123' })
+    expect((await agent.get('/api/auth/me')).status).toBe(200)
 
-    const login = await request(app).post('/api/auth/login').send({ email, password: 'secret123' })
-    expect(login.status).toBe(200)
-    expect(login.body.email).toBe(email)
+    await agent.post('/api/auth/logout')
+    expect((await agent.get('/api/auth/me')).status).toBe(401)
   })
 
   it('rechaza un registro con email duplicado', async () => {
@@ -78,60 +86,109 @@ describe('API auth', () => {
   })
 })
 
-describe('API usuarios (CRUD admin)', () => {
-  it('crea un usuario, lo lista, lo edita y lo elimina', async () => {
-    const email = `crud-${Date.now()}@example.com`
-    const create = await request(app).post('/api/users').send({
-      name: 'Usuario CRUD', email, password: 'secret123', role: 'customer', phone: '1155555555',
-    })
-    expect(create.status).toBe(201)
-    expect(create.body.role).toBe('customer')
-    expect(create.body.password).toBeUndefined()
-    const id = create.body.id
-
-    const list = await request(app).get('/api/users')
+describe('API productos: lectura publica, escritura solo admin', () => {
+  it('GET es publico, no requiere sesion', async () => {
+    const list = await request(app).get('/api/products')
     expect(list.status).toBe(200)
-    expect(list.body.some((u) => u.id === id)).toBe(true)
-
-    const update = await request(app).put(`/api/users/${id}`).send({ role: 'admin', address: 'Calle 123' })
-    expect(update.status).toBe(200)
-    expect(update.body.role).toBe('admin')
-    expect(update.body.address).toBe('Calle 123')
-
-    const del = await request(app).delete(`/api/users/${id}`)
-    expect(del.status).toBe(200)
-
-    const afterDelete = await request(app).get(`/api/users/${id}`)
-    expect(afterDelete.status).toBe(404)
   })
 
-  it('rechaza crear dos usuarios con el mismo email', async () => {
-    const email = `crud-dup-${Date.now()}@example.com`
-    await request(app).post('/api/users').send({ name: 'A', email, password: 'secret123' })
-    const dup = await request(app).post('/api/users').send({ name: 'B', email, password: 'otra1234' })
-    expect(dup.status).toBe(409)
+  it('POST sin sesion -> 401', async () => {
+    const res = await request(app).post('/api/products').send({ name: 'X', price: 1 })
+    expect(res.status).toBe(401)
+  })
+
+  it('POST con sesion de comprador (no admin) -> 403', async () => {
+    const res = await customerAgent.post('/api/products').send({ name: 'X', price: 1 })
+    expect(res.status).toBe(403)
+  })
+
+  it('POST/PUT/DELETE con sesion de admin funcionan', async () => {
+    const create = await adminAgent.post('/api/products').send({
+      name: 'Test Shoe', brand: 'Test', category: 'Zapatillas', price: 1000,
+      availability: 'stock', sizes: ['40'], stock: { 40: 3 }, image: '', description: '',
+    })
+    expect(create.status).toBe(201)
+
+    const update = await adminAgent.put(`/api/products/${create.body.id}`).send({ ...create.body, price: 1200 })
+    expect(update.status).toBe(200)
+    expect(update.body.price).toBe(1200)
+
+    const del = await adminAgent.delete(`/api/products/${create.body.id}`)
+    expect(del.status).toBe(200)
+  })
+})
+
+describe('API usuarios: CRUD admin + acceso a datos propios', () => {
+  it('listar todos los usuarios requiere admin', async () => {
+    expect((await request(app).get('/api/users')).status).toBe(401)
+    expect((await customerAgent.get('/api/users')).status).toBe(403)
+    expect((await adminAgent.get('/api/users')).status).toBe(200)
+  })
+
+  it('un comprador puede ver y editar su propio perfil', async () => {
+    const get = await customerAgent.get(`/api/users/${customerId}`)
+    expect(get.status).toBe(200)
+
+    const update = await customerAgent.put(`/api/users/${customerId}`).send({ phone: '1155555555' })
+    expect(update.status).toBe(200)
+    expect(update.body.phone).toBe('1155555555')
+  })
+
+  it('un comprador NO puede ver el perfil de otro usuario', async () => {
+    const res = await customerAgent.get('/api/users/00000000-0000-0000-0000-000000000000')
+    expect(res.status).toBe(403)
+  })
+
+  it('un comprador que manda role:"admin" en su propio perfil NO se auto-promueve', async () => {
+    const before = await customerAgent.get(`/api/users/${customerId}`)
+    expect(before.body.role).toBe('customer')
+
+    const update = await customerAgent.put(`/api/users/${customerId}`).send({ role: 'admin' })
+    expect(update.status).toBe(200)
+    expect(update.body.role).toBe('customer') // el intento se ignora
+
+    const after = await customerAgent.get(`/api/users/${customerId}`)
+    expect(after.body.role).toBe('customer')
+  })
+
+  it('un admin si puede cambiar el rol de otro usuario', async () => {
+    const create = await adminAgent.post('/api/users').send({
+      name: 'Promovible', email: `promo-${Date.now()}@example.com`, password: 'secret123', role: 'customer',
+    })
+    const update = await adminAgent.put(`/api/users/${create.body.id}`).send({ role: 'admin' })
+    expect(update.body.role).toBe('admin')
   })
 
   it('cambiar la contrasena permite loguearse con la nueva y no con la vieja', async () => {
     const email = `crud-pass-${Date.now()}@example.com`
-    const create = await request(app).post('/api/users').send({ name: 'Pass', email, password: 'original1' })
+    const create = await adminAgent.post('/api/users').send({ name: 'Pass', email, password: 'original1' })
+    await adminAgent.put(`/api/users/${create.body.id}`).send({ password: 'nueva1234' })
 
-    await request(app).put(`/api/users/${create.body.id}`).send({ password: 'nueva1234' })
+    expect((await request(app).post('/api/auth/login').send({ email, password: 'original1' })).status).toBe(401)
+    expect((await request(app).post('/api/auth/login').send({ email, password: 'nueva1234' })).status).toBe(200)
+  })
 
-    const oldLogin = await request(app).post('/api/auth/login').send({ email, password: 'original1' })
-    expect(oldLogin.status).toBe(401)
+  it('un admin no puede eliminar su propia cuenta', async () => {
+    const res = await adminAgent.delete(`/api/users/${(await adminAgent.get('/api/auth/me')).body.id}`)
+    expect(res.status).toBe(400)
+  })
 
-    const newLogin = await request(app).post('/api/auth/login').send({ email, password: 'nueva1234' })
-    expect(newLogin.status).toBe(200)
+  it('un admin puede eliminar la cuenta de otro usuario', async () => {
+    const create = await adminAgent.post('/api/users').send({
+      name: 'Borrame', email: `del-${Date.now()}@example.com`, password: 'secret123',
+    })
+    const del = await adminAgent.delete(`/api/users/${create.body.id}`)
+    expect(del.status).toBe(200)
+    expect((await adminAgent.get(`/api/users/${create.body.id}`)).status).toBe(404)
   })
 })
 
-describe('API reservas: stock transaccional', () => {
+describe('API reservas: dueno de sesion, no del body; stock transaccional', () => {
   let productId
   let orderId
 
   beforeAll(async () => {
-    const create = await request(app).post('/api/products').send({
+    const create = await adminAgent.post('/api/products').send({
       name: 'Stock Test Shoe', brand: 'Test', category: 'Zapatillas', price: 500,
       availability: 'stock', sizes: ['40'], stock: { 40: 2 }, image: '', description: '',
     })
@@ -143,24 +200,30 @@ describe('API reservas: stock transaccional', () => {
     return list.body.find((p) => p.id === productId).stock['40']
   }
 
-  it('descuenta stock por talle al confirmar la reserva', async () => {
-    expect(await currentStock()).toBe(2)
+  it('crear una reserva sin sesion -> 401', async () => {
+    const res = await request(app).post('/api/orders').send({ fulfillment: 'pickup', items: [] })
+    expect(res.status).toBe(401)
+  })
 
-    const order = await request(app).post('/api/orders').send({
+  it('la reserva queda a nombre del usuario de la sesion, no del body', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      userId: '00000000-0000-0000-0000-000000000000', // intento de spoofear otro dueno
       fulfillment: 'pickup',
       customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
       items: [{ productId, name: 'Stock Test Shoe', brand: 'Test', price: 500, image: '', availability: 'stock', size: '40', qty: 1 }],
     })
     expect(order.status).toBe(201)
-    expect(order.body.status).toBe('reservado')
+    expect(order.body.userId).toBe(customerId) // se ignoro el userId del body
     orderId = order.body.id
+  })
 
-    expect(await currentStock()).toBe(1)
+  it('descuenta stock por talle al confirmar la reserva', async () => {
+    expect(await currentStock()).toBe(1) // ya bajo 1 por la reserva anterior
   })
 
   it('rechaza la reserva si no hay stock suficiente (409) y no descuenta nada', async () => {
     const before = await currentStock()
-    const order = await request(app).post('/api/orders').send({
+    const order = await customerAgent.post('/api/orders').send({
       fulfillment: 'pickup',
       customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
       items: [{ productId, name: 'Stock Test Shoe', brand: 'Test', price: 500, image: '', availability: 'stock', size: '40', qty: 99 }],
@@ -169,9 +232,27 @@ describe('API reservas: stock transaccional', () => {
     expect(await currentStock()).toBe(before)
   })
 
-  it('cancelar la reserva repone el stock', async () => {
+  it('un comprador solo ve sus propias reservas', async () => {
+    const mine = await customerAgent.get('/api/orders')
+    expect(mine.status).toBe(200)
+    expect(mine.body.every((o) => o.userId === customerId)).toBe(true)
+    expect(mine.body.some((o) => o.id === orderId)).toBe(true)
+  })
+
+  it('el admin ve todas las reservas', async () => {
+    const all = await adminAgent.get('/api/orders')
+    expect(all.status).toBe(200)
+    expect(all.body.some((o) => o.id === orderId)).toBe(true)
+  })
+
+  it('un comprador no puede cambiar el estado de una reserva (solo admin)', async () => {
+    const res = await customerAgent.patch(`/api/orders/${orderId}/status`).send({ status: 'cancelado' })
+    expect(res.status).toBe(403)
+  })
+
+  it('cancelar la reserva (admin) repone el stock', async () => {
     const before = await currentStock()
-    const cancel = await request(app).patch(`/api/orders/${orderId}/status`).send({ status: 'cancelado' })
+    const cancel = await adminAgent.patch(`/api/orders/${orderId}/status`).send({ status: 'cancelado' })
     expect(cancel.status).toBe(200)
     expect(cancel.body.status).toBe('cancelado')
     expect(await currentStock()).toBe(before + 1)
@@ -179,7 +260,7 @@ describe('API reservas: stock transaccional', () => {
 
   it('reactivar una reserva cancelada vuelve a descontar el stock', async () => {
     const before = await currentStock()
-    const reactivate = await request(app).patch(`/api/orders/${orderId}/status`).send({ status: 'reservado' })
+    const reactivate = await adminAgent.patch(`/api/orders/${orderId}/status`).send({ status: 'reservado' })
     expect(reactivate.status).toBe(200)
     expect(await currentStock()).toBe(before - 1)
   })

@@ -37,7 +37,12 @@ corrida parte de una base limpia. Nunca corras esto apuntando a Neon/produccion.
 
 | Archivo | Cubre |
 |---|---|
-| `server/app.test.js` | Productos: crear/listar/eliminar. Auth: registro, login, email duplicado (409), password incorrecta (401). Usuarios (CRUD admin): crear/listar/editar/eliminar, email duplicado, cambio de contrasena (la vieja deja de funcionar). **Reservas: el flujo completo de stock transaccional** — crear una reserva descuenta el stock del talle en la base real, pedir mas de lo disponible devuelve 409 y no descuenta nada, cancelar repone el stock, reactivar una cancelada lo vuelve a descontar. |
+| `server/app.test.js` | **Auth**: login/registro dejan sesion valida (`/me`), sin cookie da 401, logout invalida la sesion, email duplicado (409), password incorrecta (401). **Autorizacion** (lo mas importante — confirma que la proteccion por rol funciona de verdad): productos publicos en lectura pero mutacion solo-admin (401 sin sesion, 403 como comprador), usuarios (listado solo-admin, un comprador ve/edita su propio perfil pero no el de otro, **un comprador que manda `role:"admin"` en su propio perfil NO se auto-promueve**, un admin si puede cambiar el rol de otro, no se puede eliminar la propia cuenta), reservas (crear sin sesion da 401, **la reserva queda a nombre del usuario de la sesion aunque el body intente spoofear otro `userId`**, un comprador solo ve sus propias reservas, cambiar el estado es solo-admin). **Stock transaccional**: crear una reserva descuenta el stock del talle en la base real, pedir mas de lo disponible devuelve 409 y no descuenta nada, cancelar repone el stock, reactivar una cancelada lo vuelve a descontar. |
+
+Los tests de autorizacion usan `request.agent(app)` de supertest (no
+`request(app)` suelto): un agent persiste la cookie de sesion entre
+llamadas, igual que un navegador real — se loguea una vez (`adminAgent`,
+`customerAgent`) y despues cada pedido en ese `describe` ya va autenticado.
 
 Estos son los puntos con mas logica de negocio real (calculo de stock,
 fechas, estados, carrito, transacciones SQL) — donde un bug se nota como
