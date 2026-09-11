@@ -4,6 +4,26 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-11 (aun mas tarde)
+
+### Agregado
+- **CRUD de usuarios para el admin** (`/admin/usuarios`): listar, crear,
+  editar (incluye cambiar de rol y resetear contrasena) y eliminar cuentas.
+  Nuevas rutas `GET/POST /api/users`, `GET/PUT/DELETE /api/users/:id`.
+  No se puede eliminar ni cambiar el rol de la propia cuenta logueada
+  (evita quedarse afuera del panel por error).
+- El checkout **guarda telefono y direccion en el perfil** del usuario al
+  confirmar una reserva (si estaban vacios o cambiaron), asi la proxima
+  reserva ya viene precargada.
+- Tests de integracion del CRUD de usuarios (crear/listar/editar/eliminar,
+  email duplicado, cambio de contrasena) en `server/app.test.js`.
+
+### Documentado
+- **Limitacion de seguridad conocida**: la API no verifica el rol en el
+  servidor (el filtro admin es solo de UI). Ver ARCHITECTURE.md > "Seguridad".
+  Aceptable para el estado actual del proyecto, pero a resolver antes de
+  manejar datos reales de usuarios.
+
 ## 2026-09-11 (mas tarde)
 
 ### Agregado

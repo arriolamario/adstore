@@ -37,7 +37,7 @@ corrida parte de una base limpia. Nunca corras esto apuntando a Neon/produccion.
 
 | Archivo | Cubre |
 |---|---|
-| `server/app.test.js` | Productos: crear/listar/eliminar. Auth: registro, login, email duplicado (409), password incorrecta (401). **Reservas: el flujo completo de stock transaccional** — crear una reserva descuenta el stock del talle en la base real, pedir mas de lo disponible devuelve 409 y no descuenta nada, cancelar repone el stock, reactivar una cancelada lo vuelve a descontar. |
+| `server/app.test.js` | Productos: crear/listar/eliminar. Auth: registro, login, email duplicado (409), password incorrecta (401). Usuarios (CRUD admin): crear/listar/editar/eliminar, email duplicado, cambio de contrasena (la vieja deja de funcionar). **Reservas: el flujo completo de stock transaccional** — crear una reserva descuenta el stock del talle en la base real, pedir mas de lo disponible devuelve 409 y no descuenta nada, cancelar repone el stock, reactivar una cancelada lo vuelve a descontar. |
 
 Estos son los puntos con mas logica de negocio real (calculo de stock,
 fechas, estados, carrito, transacciones SQL) — donde un bug se nota como

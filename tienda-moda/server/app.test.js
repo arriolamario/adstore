@@ -78,6 +78,54 @@ describe('API auth', () => {
   })
 })
 
+describe('API usuarios (CRUD admin)', () => {
+  it('crea un usuario, lo lista, lo edita y lo elimina', async () => {
+    const email = `crud-${Date.now()}@example.com`
+    const create = await request(app).post('/api/users').send({
+      name: 'Usuario CRUD', email, password: 'secret123', role: 'customer', phone: '1155555555',
+    })
+    expect(create.status).toBe(201)
+    expect(create.body.role).toBe('customer')
+    expect(create.body.password).toBeUndefined()
+    const id = create.body.id
+
+    const list = await request(app).get('/api/users')
+    expect(list.status).toBe(200)
+    expect(list.body.some((u) => u.id === id)).toBe(true)
+
+    const update = await request(app).put(`/api/users/${id}`).send({ role: 'admin', address: 'Calle 123' })
+    expect(update.status).toBe(200)
+    expect(update.body.role).toBe('admin')
+    expect(update.body.address).toBe('Calle 123')
+
+    const del = await request(app).delete(`/api/users/${id}`)
+    expect(del.status).toBe(200)
+
+    const afterDelete = await request(app).get(`/api/users/${id}`)
+    expect(afterDelete.status).toBe(404)
+  })
+
+  it('rechaza crear dos usuarios con el mismo email', async () => {
+    const email = `crud-dup-${Date.now()}@example.com`
+    await request(app).post('/api/users').send({ name: 'A', email, password: 'secret123' })
+    const dup = await request(app).post('/api/users').send({ name: 'B', email, password: 'otra1234' })
+    expect(dup.status).toBe(409)
+  })
+
+  it('cambiar la contrasena permite loguearse con la nueva y no con la vieja', async () => {
+    const email = `crud-pass-${Date.now()}@example.com`
+    const create = await request(app).post('/api/users').send({ name: 'Pass', email, password: 'original1' })
+
+    await request(app).put(`/api/users/${create.body.id}`).send({ password: 'nueva1234' })
+
+    const oldLogin = await request(app).post('/api/auth/login').send({ email, password: 'original1' })
+    expect(oldLogin.status).toBe(401)
+
+    const newLogin = await request(app).post('/api/auth/login').send({ email, password: 'nueva1234' })
+    expect(newLogin.status).toBe(200)
+  })
+})
+
 describe('API reservas: stock transaccional', () => {
   let productId
   let orderId

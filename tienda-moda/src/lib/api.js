@@ -32,6 +32,10 @@ export const api = {
     login: (data) => request('/api/auth/login', { method: 'POST', body: body(data) }),
   },
   users: {
+    list: () => request('/api/users'),
+    get: (id) => request(`/api/users/${id}`),
+    create: (data) => request('/api/users', { method: 'POST', body: body(data) }),
     update: (id, data) => request(`/api/users/${id}`, { method: 'PUT', body: body(data) }),
+    remove: (id) => request(`/api/users/${id}`, { method: 'DELETE' }),
   },
 }

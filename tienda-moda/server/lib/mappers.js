@@ -2,7 +2,7 @@
 
 export const mapUser = (r) => ({
   id: r.id, name: r.name, email: r.email, role: r.role,
-  phone: r.phone || '', address: r.address || '',
+  phone: r.phone || '', address: r.address || '', createdAt: r.created_at,
 })
 
 export const mapOrder = (r) => ({

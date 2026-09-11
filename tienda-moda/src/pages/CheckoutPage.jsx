@@ -13,7 +13,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, subtotal, hasOrderItems, createOrder } = useCart()
   const { refresh } = useCatalog()
-  const { user } = useAuth()
+  const { user, updateProfile } = useAuth()
 
   const [fulfillment, setFulfillment] = useState('pickup')
   const [form, setForm] = useState({
@@ -77,6 +77,12 @@ export default function CheckoutPage() {
         customer: { ...form, email: user.email },
       })
       await refresh() // refresca el catalogo con el stock actualizado
+
+      // Guarda telefono/direccion en el perfil para no volver a pedirlos en la proxima reserva.
+      if (form.phone !== (user.phone || '') || (fulfillment === 'shipping' && form.address !== (user.address || ''))) {
+        updateProfile({ phone: form.phone, address: form.address || user.address }).catch(() => {})
+      }
+
       setDone(order)
       window.scrollTo(0, 0)
     } catch (err) {

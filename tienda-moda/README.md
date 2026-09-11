@@ -94,10 +94,12 @@ npm run test:integration  # tests de integracion contra adstore_test (API real p
 - **Comprador**: agrega productos al carrito eligiendo talle (modal de vista rapida).
   Para **confirmar** la reserva se le pide crear cuenta / ingresar y luego vuelve
   al checkout con el carrito intacto. Checkout con envio o retiro, historial de
-  pedidos con estado y edicion de perfil.
+  pedidos con estado y edicion de perfil. El telefono y la direccion cargados en
+  el checkout se guardan en el perfil, asi la proxima reserva ya viene precargada.
 - **Admin**: `/admin` → alta/baja/edicion de stock **por talle**, carga de imagenes
-  por producto (archivo o URL), **Reservas** (cambiar el estado de cada reserva) y
-  reporte de ventas.
+  por producto (archivo o URL), **Usuarios** (alta/baja/edicion, cambio de rol y
+  reseteo de contrasena), **Reservas** (cambiar el estado de cada reserva, ver el
+  detalle completo) y reporte de ventas.
 
 ### Stock y estados de reserva
 
@@ -150,7 +152,7 @@ src/
     ├── HomePage / CatalogPage / ProductPage / CheckoutPage
     ├── LoginPage / RegisterPage
     ├── account/            # AccountLayout, OrdersPage, ProfilePage
-    └── admin/              # AdminLayout, AdminProducts, AdminProductForm, AdminOrders, AdminReports
+    └── admin/              # AdminLayout, AdminProducts(Form), AdminUsers(Form), AdminOrders, AdminReports
 ```
 
 Ver [ARCHITECTURE.md](ARCHITECTURE.md) para el detalle del patron y como escalarlo.

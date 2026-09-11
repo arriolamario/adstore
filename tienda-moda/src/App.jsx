@@ -19,6 +19,8 @@ import ProfilePage from './pages/account/ProfilePage'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminProductForm from './pages/admin/AdminProductForm'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminUserForm from './pages/admin/AdminUserForm'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminReports from './pages/admin/AdminReports'
 
@@ -64,6 +66,9 @@ export default function App() {
             <Route index element={<AdminProducts />} />
             <Route path="producto/nuevo" element={<AdminProductForm />} />
             <Route path="producto/:id" element={<AdminProductForm />} />
+            <Route path="usuarios" element={<AdminUsers />} />
+            <Route path="usuario/nuevo" element={<AdminUserForm />} />
+            <Route path="usuario/:id" element={<AdminUserForm />} />
             <Route path="reservas" element={<AdminOrders />} />
             <Route path="reportes" element={<AdminReports />} />
           </Route>

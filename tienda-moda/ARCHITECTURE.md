@@ -134,6 +134,20 @@ Tres bases de Postgres, cada una con un proposito distinto — nunca se mezclan:
 local no lo tiene configurado por defecto; Neon lo exige). Ver `TESTING.md`
 para el detalle de como los tests de integracion cargan `.env.test`.
 
+## Seguridad — limitacion conocida
+
+El backend **no verifica el rol en el servidor**. `/admin/*` en el frontend
+esta protegido por `ProtectedRoute` (oculta la UI si `user.role !== 'admin'`),
+pero las rutas de la API (`/api/products`, `/api/users`, `/api/orders/:id/status`...)
+responden a cualquiera que las llame directo, sin sesion ni token. Es
+aceptable para el estado actual del proyecto (demo/portfolio, sin datos de
+pago), pero **antes de manejar datos reales de usuarios habria que agregar
+autenticacion real en el servidor** (sesion con cookie firmada o JWT +
+middleware que valide `role === 'admin'` en cada ruta sensible, en particular
+`server/routes/users.routes.js` completo y las mutaciones de `products.routes.js`
+y `orders.routes.js`). No se implemento en esta iteracion para no introducir
+un sistema de auth nuevo sin que el usuario lo pida explicitamente.
+
 ## Deploy
 
 Ver la seccion "Deploy en Vercel" del `README.md`.
