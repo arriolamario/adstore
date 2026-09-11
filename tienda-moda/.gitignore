@@ -3,6 +3,7 @@ dist
 dist-ssr
 *.local
 .env
+.env.test
 .env.*.local
 .DS_Store
 .vscode/*

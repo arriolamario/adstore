@@ -1,8 +1,15 @@
-import 'dotenv/config'
 import { readFileSync } from 'node:fs'
+import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs'
-import { pool } from './db.js'
 import { SEED_PRODUCTS } from '../src/data/products.js'
+
+// --env=test carga .env.test (base local de tests) en vez de .env (base local de desarrollo).
+// db.js hace su propio `import 'dotenv/config'`, que no pisa variables ya definidas,
+// por eso cargamos el archivo correcto ANTES de importarlo (import dinamico, no hoisteado).
+const useTest = process.argv.includes('--env=test')
+dotenv.config({ path: useTest ? '.env.test' : '.env', override: true })
+
+const { pool } = await import('./db.js')
 
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8')
 
@@ -14,7 +21,7 @@ const ADMIN = {
 }
 
 async function main() {
-  console.log('→ Conectando a la base…')
+  console.log(`→ Conectando a la base (${useTest ? 'test' : 'local'})…`)
   const client = await pool.connect()
   try {
     console.log('→ Borrando y recreando tablas…')

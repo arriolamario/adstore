@@ -12,9 +12,12 @@ if (!process.env.DATABASE_URL) {
 const url = new URL(process.env.DATABASE_URL)
 url.searchParams.delete('channel_binding')
 
+// Postgres local (dev/test) no tiene SSL configurado; Neon (produccion) lo exige.
+const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(url.hostname)
+
 export const pool = new Pool({
   connectionString: url.toString(),
-  ssl: { rejectUnauthorized: false },
+  ssl: isLocalHost ? false : { rejectUnauthorized: false },
   max: 5,
 })
 

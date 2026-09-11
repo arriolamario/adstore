@@ -4,6 +4,27 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-11 (mas tarde)
+
+### Agregado
+- **Base de datos local**: PostgreSQL instalado en la maquina de desarrollo,
+  con dos bases separadas — `adstore_dev` (desarrollo, `.env`) y `adstore_test`
+  (tests, `.env.test`, se resetea automaticamente en cada corrida). Neon queda
+  exclusivamente para produccion (Vercel).
+- Tests de integracion reales del backend: `server/app.test.js` con
+  `supertest`, contra la base local de test. Cubre el flujo completo de stock
+  transaccional (crear reserva descuenta, sin stock devuelve 409, cancelar
+  repone, reactivar vuelve a descontar) y auth (registro, login, duplicados).
+  Corren con `npm run test:integration`, separados de `npm test` (que sigue
+  siendo 100% unitario y no requiere ninguna base levantada).
+- `npm run db:test:reset` para resetear la base de test a mano.
+
+### Cambiado
+- `server/db.js` desactiva SSL cuando el host es `localhost` (Postgres local
+  no lo tiene configurado; Neon si lo exige).
+- `server/migrate.js` acepta `--env=test` para migrar/sembrar `adstore_test`
+  en vez de la base por defecto.
+
 ## 2026-09-11
 
 ### Agregado

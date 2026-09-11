@@ -30,18 +30,38 @@ configurar en el proyecto de Vercel (Settings del proyecto, no en el codigo):
    Postgres (Production y Preview). El `.env` local nunca se sube al repo.
 4. Volver a desplegar (Redeploy) despues de guardar esos cambios.
 
+## Base de datos local
+
+El desarrollo local usa **Postgres instalado en tu maquina**, no Neon
+(produccion) — asi las pruebas y los `db:reset` no tocan datos reales.
+Neon solo lo usa el deploy de Vercel (su `DATABASE_URL` se configura en el
+dashboard de Vercel, no en este repo).
+
+1. Instala PostgreSQL (Windows: `winget install --id PostgreSQL.PostgreSQL.17 -e`,
+   o el instalador de postgresql.org). Anota el password que le pongas al rol `postgres`.
+2. Crea las dos bases locales (una para desarrollo, otra para tests — se
+   mantienen separadas para que correr los tests no te pise datos que estabas
+   probando a mano):
+
+```sql
+CREATE DATABASE adstore_dev;
+CREATE DATABASE adstore_test;
+```
+
+3. Copia `.env.example` a `.env` (base `adstore_dev`) y tambien a `.env.test`
+   (base `adstore_test`, puerto distinto), completando el password que elegiste.
+
 ## Levantar en local
 
-1. Copia `.env.example` a `.env` y completa `DATABASE_URL` con tu cadena de Postgres
-   (ya viene configurado para el Neon del proyecto).
-2. Instala dependencias y prepara la base (esto **borra y recrea** las tablas):
+1. Instala dependencias y prepara la base de desarrollo (esto **borra y
+   recrea** las tablas de `adstore_dev`):
 
 ```bash
 npm install
 npm run db:reset
 ```
 
-3. Levanta API + frontend juntos:
+2. Levanta API + frontend juntos:
 
 ```bash
 npm run dev
@@ -53,13 +73,15 @@ API en `http://localhost:3001`).
 Otros scripts:
 
 ```bash
-npm run dev:api    # solo la API (puerto 3001)
-npm run dev:web    # solo el frontend (Vite)
-npm run db:reset   # DROP + CREATE de las tablas y siembra el catalogo + admin
-npm run build      # build de produccion del frontend en /dist
-npm run start      # sirve la API + el build de /dist (produccion simple)
-npm test           # corre la suite de tests (Vitest) una vez
-npm run test:watch # tests en modo watch
+npm run dev:api        # solo la API (puerto 3001)
+npm run dev:web        # solo el frontend (Vite)
+npm run db:reset       # DROP + CREATE de adstore_dev y siembra el catalogo + admin
+npm run db:test:reset  # idem, contra adstore_test (usa .env.test)
+npm run build          # build de produccion del frontend en /dist
+npm run start          # sirve la API + el build de /dist (produccion simple)
+npm test               # tests unitarios (Vitest), no tocan la base
+npm run test:watch     # tests unitarios en modo watch
+npm run test:integration  # tests de integracion contra adstore_test (API real por HTTP)
 ```
 
 ## Usuarios de prueba

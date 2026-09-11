@@ -120,6 +120,20 @@ Para evitar dudas de "donde vive cada dato":
 | Carrito (borrador, sin confirmar) | `localStorage` del navegador | Evita crear filas en la DB por cada click; se descarta o se confirma como reserva |
 | Sesion (usuario logueado) | `localStorage` del navegador | Solo dice "quien sos"; los datos reales estan en la DB |
 
+## Entornos y bases de datos
+
+Tres bases de Postgres, cada una con un proposito distinto — nunca se mezclan:
+
+| Entorno | Base | Configurada en | Se resetea |
+|---|---|---|---|
+| Desarrollo local | `adstore_dev` (Postgres local) | `.env` | manual (`npm run db:reset`) |
+| Tests de integracion | `adstore_test` (Postgres local) | `.env.test` | automatico, en cada corrida (`npm run test:integration`) |
+| Produccion | Neon (nube) | Variables de entorno del proyecto en Vercel | nunca desde el codigo |
+
+`server/db.js` detecta si el host es `localhost` para desactivar SSL (Postgres
+local no lo tiene configurado por defecto; Neon lo exige). Ver `TESTING.md`
+para el detalle de como los tests de integracion cargan `.env.test`.
+
 ## Deploy
 
 Ver la seccion "Deploy en Vercel" del `README.md`.
