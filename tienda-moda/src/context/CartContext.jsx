@@ -90,6 +90,11 @@ export function CartProvider({ children }) {
     return updated
   }, [])
 
+  const deleteOrder = useCallback(async (orderId) => {
+    await api.orders.remove(orderId)
+    setOrders((prev) => prev.filter((o) => o.id !== orderId))
+  }, [])
+
   const ordersForUser = useCallback(
     (userId) => orders.filter((o) => o.userId === userId),
     [orders],
@@ -111,6 +116,7 @@ export function CartProvider({ children }) {
     clearCart,
     createOrder,
     updateOrderStatus,
+    deleteOrder,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

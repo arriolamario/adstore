@@ -4,6 +4,20 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16 (noche)
+
+### Agregado
+- Las reservas se pueden **eliminar** desde `/admin/reservas` (solo admin).
+  Nuevo `DELETE /api/orders/:id`.
+- Si la reserva eliminada estaba activa (no cancelada ni entregada) se
+  repone el stock antes de borrarla; si ya estaba cancelada o entregada,
+  eliminarla no vuelve a tocar el stock.
+- Se extrajo `adjustStockForItems` a `server/lib/stock.js`, compartido entre
+  crear/cambiar-estado/eliminar reservas (antes estaba duplicado).
+- 4 tests de integracion nuevos (36 en total): permisos (401/403), reposicion
+  al eliminar una activa, sin reposicion al eliminar una ya entregada o ya
+  cancelada.
+
 ## 2026-09-16 (aun mas tarde)
 
 ### Cambiado

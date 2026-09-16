@@ -3,6 +3,7 @@ import { withTransaction, query } from '../db.js'
 import { wrap, fail } from '../lib/http.js'
 import { mapOrder } from '../lib/mappers.js'
 import { requireAuth, requireAdmin } from '../lib/auth.js'
+import { adjustStockForItems } from '../lib/stock.js'
 import { addBusinessDays, uid } from '../../src/lib/format.js'
 
 export const ordersRouter = Router()
@@ -66,22 +67,29 @@ ordersRouter.patch('/:id/status', requireAdmin, wrap(async (req, res) => {
     const prev = rows[0].status
     const items = rows[0].items || []
 
-    const adjust = (sign) => Promise.all(
-      items.filter((i) => i.availability === 'stock').map(async (it) => {
-        const r = await client.query('SELECT stock FROM products WHERE id=$1 FOR UPDATE', [it.productId])
-        if (!r.rows.length) return
-        const stock = r.rows[0].stock || {}
-        stock[it.size] = Math.max(0, Number(stock[it.size] || 0) + sign * Number(it.qty))
-        await client.query('UPDATE products SET stock=$1::jsonb, updated_at=now() WHERE id=$2',
-          [JSON.stringify(stock), it.productId])
-      }),
-    )
-
-    if (status === 'cancelado' && prev !== 'cancelado') await adjust(+1)
-    if (prev === 'cancelado' && status !== 'cancelado') await adjust(-1)
+    if (status === 'cancelado' && prev !== 'cancelado') await adjustStockForItems(client, items, +1)
+    if (prev === 'cancelado' && status !== 'cancelado') await adjustStockForItems(client, items, -1)
 
     const upd = await client.query('UPDATE orders SET status=$2 WHERE id=$1 RETURNING *', [req.params.id, status])
     return upd.rows[0]
   })
   res.json(mapOrder(order))
+}))
+
+// Elimina la reserva. Si el stock seguia "tomado" por ella (cualquier estado
+// salvo cancelado -ya repuesto- o entregado -ya salio del local-), se repone
+// antes de borrar, para no perder unidades.
+ordersRouter.delete('/:id', requireAdmin, wrap(async (req, res) => {
+  await withTransaction(async (client) => {
+    const { rows } = await client.query('SELECT * FROM orders WHERE id=$1 FOR UPDATE', [req.params.id])
+    if (!rows.length) throw fail(404, 'Reserva no encontrada')
+    const { status, items } = rows[0]
+
+    if (status !== 'cancelado' && status !== 'entregado') {
+      await adjustStockForItems(client, items || [], +1)
+    }
+
+    await client.query('DELETE FROM orders WHERE id=$1', [req.params.id])
+  })
+  res.json({ ok: true })
 }))

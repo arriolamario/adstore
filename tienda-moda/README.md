@@ -124,6 +124,9 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 - Estados: `Reservado → En preparacion → Listo → Entregado`, o `Cancelado`.
   El admin los cambia desde `/admin/reservas`. Cancelar **repone** el stock;
   reactivar una cancelada lo vuelve a descontar.
+- El admin tambien puede **eliminar** una reserva desde `/admin/reservas`.
+  Si todavia estaba activa (no cancelada ni entregada), se repone el stock
+  antes de borrarla.
 
 ## Estructura
 

@@ -158,7 +158,7 @@ Cada ruta declara explicitamente que necesita, con los middlewares de
 |---|---|---|
 | (ninguno) | nada — publico | `GET /api/products`, `POST /api/auth/register`\|`login` |
 | `requireAuth` | sesion valida (cualquier rol) | `POST /api/orders` (el dueno es siempre `req.user.id`, nunca lo que mande el body), `GET /api/orders` (un comprador solo ve las propias) |
-| `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos y categorias, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status` |
+| `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos y categorias, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status`, `DELETE /api/orders/:id` |
 | `requireSelfOrAdmin('id')` | sesion valida + (dueno del `:id` o admin) | `GET/PUT /api/users/:id` (tu perfil, o cualquiera si sos admin) |
 
 Un usuario normal que manda `role: "admin"` en su propio `PUT /api/users/:id`

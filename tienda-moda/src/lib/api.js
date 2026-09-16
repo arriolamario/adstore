@@ -37,6 +37,7 @@ export const api = {
     create: (data) => request('/api/orders', { method: 'POST', body: body(data) }),
     setStatus: (id, status) =>
       request(`/api/orders/${id}/status`, { method: 'PATCH', body: body({ status }) }),
+    remove: (id) => request(`/api/orders/${id}`, { method: 'DELETE' }),
   },
   auth: {
     register: (data) => request('/api/auth/register', { method: 'POST', body: body(data) }),

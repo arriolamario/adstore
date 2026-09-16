@@ -7,10 +7,11 @@ import { useCart } from '../../context/CartContext'
 import { useCatalog } from '../../context/CatalogContext'
 
 export default function AdminOrders() {
-  const { orders, updateOrderStatus, loadOrders, ordersLoading } = useCart()
+  const { orders, updateOrderStatus, deleteOrder, loadOrders, ordersLoading } = useCart()
   const { refresh } = useCatalog()
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(null)
+  const [msg, setMsg] = useState('')
 
   useEffect(() => { loadOrders() }, [loadOrders])
 
@@ -24,6 +25,17 @@ export default function AdminOrders() {
     // El servidor repone / descuenta stock segun corresponda (cancelar / reactivar).
     await updateOrderStatus(order.id, next)
     await refresh()
+  }
+
+  const remove = async (order) => {
+    if (!confirm(`Eliminar la reserva ${order.id}? Esta accion no se puede deshacer.`)) return
+    setMsg('')
+    try {
+      await deleteOrder(order.id)
+      await refresh() // el stock puede haberse repuesto
+    } catch (err) {
+      setMsg(err.message)
+    }
   }
 
   if (ordersLoading && orders.length === 0) {
@@ -54,6 +66,8 @@ export default function AdminOrders() {
         })}
       </div>
 
+      {msg && <p className="badge badge--order" style={{ marginBottom: 'var(--space-4)' }}>{msg}</p>}
+
       <div className="table-wrap">
         <table className="data">
           <thead>
@@ -65,6 +79,7 @@ export default function AdminOrders() {
               <th>Entrega</th>
               <th>Total</th>
               <th>Estado</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -103,6 +118,9 @@ export default function AdminOrders() {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
+                </td>
+                <td>
+                  <button className="btn btn--ghost btn--sm" onClick={() => remove(o)}>Eliminar</button>
                 </td>
               </tr>
             ))}

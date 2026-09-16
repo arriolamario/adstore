@@ -326,4 +326,47 @@ describe('API reservas: dueno de sesion, no del body; stock transaccional', () =
     expect(reactivate.status).toBe(200)
     expect(await currentStock()).toBe(before - 1)
   })
+
+  it('eliminar una reserva sin sesion -> 401, como comprador -> 403', async () => {
+    expect((await request(app).delete(`/api/orders/${orderId}`)).status).toBe(401)
+    expect((await customerAgent.delete(`/api/orders/${orderId}`)).status).toBe(403)
+  })
+
+  it('el admin elimina una reserva activa y se repone el stock', async () => {
+    const before = await currentStock()
+    const del = await adminAgent.delete(`/api/orders/${orderId}`)
+    expect(del.status).toBe(200)
+    expect(await currentStock()).toBe(before + 1)
+
+    const stillThere = await adminAgent.get('/api/orders')
+    expect(stillThere.body.some((o) => o.id === orderId)).toBe(false)
+  })
+
+  it('eliminar una reserva ya entregada no repone stock (ya salio del local)', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      fulfillment: 'pickup',
+      customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
+      items: [{ productId, name: 'Stock Test Shoe', brand: 'Test', price: 500, image: '', availability: 'stock', size: '40', qty: 1 }],
+    })
+    await adminAgent.patch(`/api/orders/${order.body.id}/status`).send({ status: 'entregado' })
+
+    const before = await currentStock()
+    const del = await adminAgent.delete(`/api/orders/${order.body.id}`)
+    expect(del.status).toBe(200)
+    expect(await currentStock()).toBe(before) // sin cambios
+  })
+
+  it('eliminar una reserva ya cancelada no vuelve a reponer stock (ya se habia repuesto)', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      fulfillment: 'pickup',
+      customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
+      items: [{ productId, name: 'Stock Test Shoe', brand: 'Test', price: 500, image: '', availability: 'stock', size: '40', qty: 1 }],
+    })
+    await adminAgent.patch(`/api/orders/${order.body.id}/status`).send({ status: 'cancelado' })
+
+    const before = await currentStock()
+    const del = await adminAgent.delete(`/api/orders/${order.body.id}`)
+    expect(del.status).toBe(200)
+    expect(await currentStock()).toBe(before) // sin cambios, no se duplica la reposicion
+  })
 })
