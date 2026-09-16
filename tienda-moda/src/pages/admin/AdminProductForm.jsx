@@ -106,7 +106,7 @@ export default function AdminProductForm() {
 
       <div className="form-row">
         <Field label="Nombre" name="name" value={form.name} onChange={set('name')} required />
-        <Field label="Marca" name="brand" value={form.brand} onChange={set('brand')} required />
+        <Field label="Marca (opcional)" name="brand" value={form.brand} onChange={set('brand')} />
       </div>
 
       <div className="form-row">

@@ -4,6 +4,18 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16 (mas tarde)
+
+### Cambiado
+- El campo "Marca" del alta/edicion de productos (admin) ya no es obligatorio.
+- Direccion real del local: Av. Fuerza Aerea 2778 (antes un placeholder),
+  actualizada en el Footer y en la seccion "Reserva hoy, retira cuando quieras".
+
+### Agregado
+- Links a Instagram y WhatsApp en el Footer. Ademas, la seccion del local en
+  la home tiene un boton directo "Escribinos por WhatsApp" (reemplaza al de
+  "Crear cuenta", que ya esta presente en el navbar y el hero).
+
 ## 2026-09-16
 
 ### Agregado

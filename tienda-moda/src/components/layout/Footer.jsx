@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
 
+const INSTAGRAM_URL = 'https://instagram.com/ad.modayconfort'
+const WHATSAPP_URL = 'https://wa.me/5492664325416'
+
 export default function Footer() {
   return (
     <footer className="footer">
@@ -31,9 +34,11 @@ export default function Footer() {
 
           <div>
             <h4>Local</h4>
-            <a href="#local">Av. Siempre Viva 1234</a>
+            <a href="#local">Av. Fuerza Aerea 2778</a>
             <a href="#local">Lun a Sab · 10 a 19 h</a>
             <a href="mailto:hola@adstore.com">hola@adstore.com</a>
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a>
           </div>
         </div>
 
