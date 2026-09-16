@@ -24,6 +24,12 @@ export const api = {
     remove: (id) => request(`/api/products/${id}`, { method: 'DELETE' }),
     reset: () => request('/api/products/reset', { method: 'POST' }),
   },
+  categories: {
+    list: () => request('/api/categories'),
+    create: (data) => request('/api/categories', { method: 'POST', body: body(data) }),
+    update: (id, data) => request(`/api/categories/${id}`, { method: 'PUT', body: body(data) }),
+    remove: (id) => request(`/api/categories/${id}`, { method: 'DELETE' }),
+  },
   orders: {
     // userId solo tiene efecto si quien pregunta es admin; un comprador
     // siempre recibe unicamente sus propias reservas (lo filtra el servidor).

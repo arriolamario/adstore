@@ -2,6 +2,7 @@
 
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
@@ -12,6 +13,16 @@ CREATE TABLE users (
   role       text NOT NULL DEFAULT 'customer',
   phone      text NOT NULL DEFAULT '',
   address    text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- El nombre de categoria en products.category es texto libre, no una FK a
+-- esta tabla (evita una migracion riesgosa de datos existentes). Al renombrar
+-- una categoria, la API actualiza en la misma transaccion los products.category
+-- que coincidan con el nombre viejo (ver server/routes/categories.routes.js).
+CREATE TABLE categories (
+  id         text PRIMARY KEY,
+  name       text UNIQUE NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

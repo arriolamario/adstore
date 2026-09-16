@@ -115,6 +115,7 @@ Para evitar dudas de "donde vive cada dato":
 | Dato | Vive en | Por que |
 |---|---|---|
 | Catalogo de productos | Postgres (`products`) | Fuente de verdad compartida por todos |
+| Categorias | Postgres (`categories`) | Administrables desde `/admin/categorias`. `products.category` sigue siendo texto libre (no una FK) para no migrar datos existentes; renombrar una categoria actualiza en la misma transaccion los productos que la usaban, y no se puede eliminar una categoria con productos (`server/routes/categories.routes.js`) |
 | Reservas confirmadas | Postgres (`orders`) | Idem, y necesitan transacciones (stock) |
 | Usuarios | Postgres (`users`) | Idem |
 | Carrito (borrador, sin confirmar) | `localStorage` del navegador | Evita crear filas en la DB por cada click; se descarta o se confirma como reserva |
@@ -157,7 +158,7 @@ Cada ruta declara explicitamente que necesita, con los middlewares de
 |---|---|---|
 | (ninguno) | nada — publico | `GET /api/products`, `POST /api/auth/register`\|`login` |
 | `requireAuth` | sesion valida (cualquier rol) | `POST /api/orders` (el dueno es siempre `req.user.id`, nunca lo que mande el body), `GET /api/orders` (un comprador solo ve las propias) |
-| `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status` |
+| `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos y categorias, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status` |
 | `requireSelfOrAdmin('id')` | sesion valida + (dueno del `:id` o admin) | `GET/PUT /api/users/:id` (tu perfil, o cualquiera si sos admin) |
 
 Un usuario normal que manda `role: "admin"` en su propio `PUT /api/users/:id`

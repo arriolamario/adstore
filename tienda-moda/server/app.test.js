@@ -118,6 +118,68 @@ describe('API productos: lectura publica, escritura solo admin', () => {
   })
 })
 
+describe('API categorias: lectura publica, escritura solo admin', () => {
+  it('GET es publico, no requiere sesion', async () => {
+    const list = await request(app).get('/api/categories')
+    expect(list.status).toBe(200)
+  })
+
+  it('POST sin sesion -> 401, con sesion de comprador -> 403', async () => {
+    expect((await request(app).post('/api/categories').send({ name: 'X' })).status).toBe(401)
+    expect((await customerAgent.post('/api/categories').send({ name: 'X' })).status).toBe(403)
+  })
+
+  it('un admin crea, lista y elimina una categoria', async () => {
+    const create = await adminAgent.post('/api/categories').send({ name: `Deportiva ${Date.now()}` })
+    expect(create.status).toBe(201)
+    expect(create.body.id).toBeTruthy() // se genero un slug como id
+
+    const list = await request(app).get('/api/categories')
+    expect(list.body.some((c) => c.id === create.body.id)).toBe(true)
+
+    const del = await adminAgent.delete(`/api/categories/${create.body.id}`)
+    expect(del.status).toBe(200)
+  })
+
+  it('rechaza crear dos categorias con el mismo nombre', async () => {
+    const name = `Unica ${Date.now()}`
+    await adminAgent.post('/api/categories').send({ name })
+    const dup = await adminAgent.post('/api/categories').send({ name })
+    expect(dup.status).toBe(409)
+  })
+
+  it('renombrar una categoria actualiza los productos que la usaban', async () => {
+    const oldName = `Vieja ${Date.now()}`
+    const newName = `Nueva ${Date.now()}`
+    const cat = await adminAgent.post('/api/categories').send({ name: oldName })
+
+    const product = await adminAgent.post('/api/products').send({
+      name: 'Producto de la categoria', brand: 'Test', category: oldName, price: 100,
+      availability: 'stock', sizes: [], stock: {}, image: '', description: '',
+    })
+
+    const rename = await adminAgent.put(`/api/categories/${cat.body.id}`).send({ name: newName })
+    expect(rename.status).toBe(200)
+    expect(rename.body.name).toBe(newName)
+
+    const refreshed = await request(app).get('/api/products')
+    const updated = refreshed.body.find((p) => p.id === product.body.id)
+    expect(updated.category).toBe(newName)
+  })
+
+  it('no deja eliminar una categoria que tiene productos', async () => {
+    const name = `En uso ${Date.now()}`
+    const cat = await adminAgent.post('/api/categories').send({ name })
+    await adminAgent.post('/api/products').send({
+      name: 'Ocupa la categoria', brand: 'Test', category: name, price: 100,
+      availability: 'stock', sizes: [], stock: {}, image: '', description: '',
+    })
+
+    const del = await adminAgent.delete(`/api/categories/${cat.body.id}`)
+    expect(del.status).toBe(409)
+  })
+})
+
 describe('API usuarios: CRUD admin + acceso a datos propios', () => {
   it('listar todos los usuarios requiere admin', async () => {
     expect((await request(app).get('/api/users')).status).toBe(401)

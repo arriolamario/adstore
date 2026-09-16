@@ -112,9 +112,10 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
   pedidos con estado y edicion de perfil. El telefono y la direccion cargados en
   el checkout se guardan en el perfil, asi la proxima reserva ya viene precargada.
 - **Admin**: `/admin` → alta/baja/edicion de stock **por talle**, carga de imagenes
-  por producto (archivo o URL), **Usuarios** (alta/baja/edicion, cambio de rol y
-  reseteo de contrasena), **Reservas** (cambiar el estado de cada reserva, ver el
-  detalle completo) y reporte de ventas.
+  por producto (archivo o URL), **Categorias** (crear, renombrar y eliminar — no
+  se puede eliminar una categoria con productos), **Usuarios** (alta/baja/edicion,
+  cambio de rol y reseteo de contrasena), **Reservas** (cambiar el estado de cada
+  reserva, ver el detalle completo) y reporte de ventas.
 
 ### Stock y estados de reserva
 
@@ -133,7 +134,7 @@ api/
 server/
 ├── db.js         # pool de conexion a Postgres (Neon) + helper de transacciones
 ├── lib/          # http.js (wrap/fail), mappers.js (DB -> shape del frontend)
-├── routes/       # un router por recurso: products, auth, users, orders
+├── routes/       # un router por recurso: products, categories, auth, users, orders
 ├── schema.sql    # DROP + CREATE de users / products / orders
 ├── migrate.js    # corre schema.sql y siembra catalogo + admin (npm run db:reset)
 ├── app.js        # composition root: crea la app Express y monta los routers
@@ -167,7 +168,7 @@ src/
     ├── HomePage / CatalogPage / ProductPage / CheckoutPage
     ├── LoginPage / RegisterPage
     ├── account/            # AccountLayout, OrdersPage, ProfilePage
-    └── admin/              # AdminLayout, AdminProducts(Form), AdminUsers(Form), AdminOrders, AdminReports
+    └── admin/              # AdminLayout, AdminProducts(Form), AdminCategories, AdminUsers(Form), AdminOrders, AdminReports
 ```
 
 Ver [ARCHITECTURE.md](ARCHITECTURE.md) para el detalle del patron y como escalarlo.

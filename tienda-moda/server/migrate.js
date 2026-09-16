@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs'
 import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs'
-import { SEED_PRODUCTS } from '../src/data/products.js'
+import { SEED_PRODUCTS, CATEGORIES } from '../src/data/products.js'
+import { slugify } from '../src/lib/format.js'
 
 // --env=test carga .env.test (base local de tests) en vez de .env (base local de desarrollo).
 // db.js hace su propio `import 'dotenv/config'`, que no pisa variables ya definidas,
@@ -26,6 +27,11 @@ async function main() {
   try {
     console.log('→ Borrando y recreando tablas…')
     await client.query(schema)
+
+    console.log(`→ Sembrando ${CATEGORIES.length} categorias…`)
+    for (const name of CATEGORIES) {
+      await client.query('INSERT INTO categories (id, name) VALUES ($1,$2)', [slugify(name), name])
+    }
 
     console.log(`→ Sembrando ${SEED_PRODUCTS.length} productos…`)
     for (const p of SEED_PRODUCTS) {

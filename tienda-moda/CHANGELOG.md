@@ -4,6 +4,25 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16
+
+### Agregado
+- **CRUD de categorias para el admin** (`/admin/categorias`): crear, renombrar
+  y eliminar, con edicion inline en la tabla (no hace falta una pantalla
+  aparte para algo de un solo campo).
+- Nueva tabla `categories` en Postgres (antes eran un array hardcodeado en
+  `src/data/products.js`). Nuevas rutas: `GET /api/categories` (publica),
+  `POST/PUT/DELETE /api/categories` (admin).
+- `products.category` sigue siendo texto libre, no una FK (evita migrar datos
+  existentes) — pero **renombrar una categoria actualiza en la misma
+  transaccion** los productos que la usaban, y **no se puede eliminar una
+  categoria que tiene productos** (409 con la cantidad).
+- `CatalogContext.categories` ahora viene de la API en vez de un array
+  estatico — Filters y el selector de categoria del admin de productos se
+  actualizan solos apenas se crea/renombra/borra una categoria.
+- 6 tests de integracion nuevos (32 en total): lectura publica, escritura
+  solo-admin, nombre duplicado, cascada del rename, bloqueo de borrado en uso.
+
 ## 2026-09-11 (noche)
 
 ### Agregado

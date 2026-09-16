@@ -1,19 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { CATEGORIES } from '../data/products'
 import { api } from '../lib/api'
 
 const CatalogContext = createContext(null)
 
 export function CatalogProvider({ children }) {
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([]) // nombres (string[]) — el CRUD completo vive en /admin/categorias
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const refresh = useCallback(async () => {
     try {
       setError(null)
-      const list = await api.products.list()
-      setProducts(list)
+      const [productList, categoryList] = await Promise.all([api.products.list(), api.categories.list()])
+      setProducts(productList)
+      setCategories(categoryList.map((c) => c.name))
     } catch (err) {
       setError(err.message)
     } finally {
@@ -44,7 +45,7 @@ export function CatalogProvider({ children }) {
 
   const value = {
     products,
-    categories: CATEGORIES,
+    categories,
     loading,
     error,
     refresh,

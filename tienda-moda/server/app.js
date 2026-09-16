@@ -6,6 +6,7 @@ import express from 'express'
 import cookieParser from 'cookie-parser'
 import { pool } from './db.js'
 import { productsRouter } from './routes/products.routes.js'
+import { categoriesRouter } from './routes/categories.routes.js'
 import { authRouter } from './routes/auth.routes.js'
 import { usersRouter } from './routes/users.routes.js'
 import { ordersRouter } from './routes/orders.routes.js'
@@ -17,6 +18,7 @@ app.use(express.json({ limit: '12mb' })) // imagenes en base64
 app.use(cookieParser())
 
 app.use('/api/products', productsRouter)
+app.use('/api/categories', categoriesRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/orders', ordersRouter)
