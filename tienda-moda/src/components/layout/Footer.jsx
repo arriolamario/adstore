@@ -35,8 +35,6 @@ export default function Footer() {
           <div>
             <h4>Local</h4>
             <a href="#local">Av. Fuerza Aerea 2778</a>
-            <a href="#local">Lun a Sab · 10 a 19 h</a>
-            <a href="mailto:hola@adstore.com">hola@adstore.com</a>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">WhatsApp</a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a>
           </div>

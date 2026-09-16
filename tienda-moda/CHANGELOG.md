@@ -4,6 +4,13 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16 (aun mas tarde)
+
+### Cambiado
+- Se quito el horario de atencion (Lun a Sab 10 a 19 h) y el email de
+  contacto (hola@adstore.com) del Footer y de la seccion del local en la
+  home — ya no correspondian.
+
 ## 2026-09-16 (mas tarde)
 
 ### Cambiado

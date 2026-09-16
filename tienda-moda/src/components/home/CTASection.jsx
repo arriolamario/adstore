@@ -20,8 +20,7 @@ export default function CTASection() {
             Reserva hoy, retira cuando quieras
           </h2>
           <p style={{ margin: 'var(--space-4) auto 0', maxWidth: '48ch', opacity: 0.92 }}>
-            Estamos en Av. Fuerza Aerea 2778. Atencion de lunes a sabado de 10 a 19 h.
-            Reserva online y evita la cola.
+            Estamos en Av. Fuerza Aerea 2778. Reserva online y evita la cola.
           </p>
           <div style={{ marginTop: 'var(--space-6)', display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Button to="/catalogo" variant="secondary" size="lg">Explorar productos</Button>
