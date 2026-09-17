@@ -9,10 +9,18 @@ a medida que crezca. Actualiza este archivo cuando cambies algo estructural
 Cliente-servidor clasico, sin framework full-stack:
 
 ```
-Browser (React SPA)  <--fetch /api/*-->  Express API  <--pg-->  PostgreSQL (Neon)
+Browser (React SPA)   <--fetch /api/*-->
+                                          Express API  <--pg-->  PostgreSQL (Neon)
+App Android (RN/Expo) <--fetch /api/*-->
 ```
 
-- **Frontend**: React 18 + Vite + React Router. SPA pura, sin SSR.
+Dos clientes, una sola API: el sitio web (`tienda-moda/`, este proyecto) y
+la app de administracion para Android (`../admin-app/`, sibling de esta
+carpeta — ver su propio README). Ninguno tiene logica de negocio propia
+mas alla de UI; las reglas (stock transaccional, permisos por rol, etc.)
+viven todas en `server/`.
+
+- **Frontend web**: React 18 + Vite + React Router. SPA pura, sin SSR.
 - **Backend**: Express corriendo como servidor Node normal en local
   (`server/index.js`) y como funcion serverless en Vercel (`api/index.js`
   reexporta la misma app Express, ver `server/app.js`).
@@ -160,6 +168,14 @@ Cada ruta declara explicitamente que necesita, con los middlewares de
 | `requireAuth` | sesion valida (cualquier rol) | `POST /api/orders` (el dueno es siempre `req.user.id`, nunca lo que mande el body), `GET /api/orders` (un comprador solo ve las propias) |
 | `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos y categorias, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status`, `DELETE /api/orders/:id` |
 | `requireSelfOrAdmin('id')` | sesion valida + (dueno del `:id` o admin) | `GET/PUT /api/users/:id` (tu perfil, o cualquiera si sos admin) |
+
+El token viaja de dos formas segun el cliente, y `requireAuth` acepta
+cualquiera de las dos (revisa la cookie primero, despues el header):
+- **Web**: cookie `httpOnly` (no accesible por JS, mitiga XSS).
+- **App movil** (`admin-app/`, React Native — no tiene cookie jar de
+  navegador): header `Authorization: Bearer <token>`. `login`/`register`
+  devuelven el token en el body de la respuesta ademas de setear la cookie
+  (la web lo ignora, la app lo guarda con `expo-secure-store`).
 
 Un usuario normal que manda `role: "admin"` en su propio `PUT /api/users/:id`
 **no se auto-promueve**: el servidor solo deja tocar el campo `role` cuando

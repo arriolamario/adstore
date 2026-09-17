@@ -8,6 +8,9 @@ Persisten en la base: usuarios, productos (con stock por talle) y reservas.
 El carrito de compra (borrador antes de confirmar) sigue viviendo en el
 `localStorage` del navegador — es intencional, evita crear filas por cada click.
 
+Hay tambien una **app Android para el admin** en [`../admin-app/`](../admin-app/README.md)
+(React Native + Expo), que habla con esta misma API.
+
 ## Documentacion
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — patron de diseno, estructura de carpetas

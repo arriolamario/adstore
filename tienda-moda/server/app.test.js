@@ -84,6 +84,22 @@ describe('Auth: sesion via cookie', () => {
     const login = await request(app).post('/api/auth/login').send({ email, password: 'incorrecta' })
     expect(login.status).toBe(401)
   })
+
+  it('login devuelve un token, y ese token funciona como header Authorization: Bearer (sin cookie) — lo usa la app movil', async () => {
+    const email = `bearer-${Date.now()}@example.com`
+    const reg = await request(app).post('/api/auth/register').send({ name: 'Bearer Test', email, password: 'secret123' })
+    expect(reg.body.token).toBeTruthy()
+
+    // request(app) sin agent: no manda la cookie de la registracion anterior.
+    const me = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${reg.body.token}`)
+    expect(me.status).toBe(200)
+    expect(me.body.email).toBe(email)
+  })
+
+  it('un Bearer token invalido da 401 igual que sin sesion', async () => {
+    const res = await request(app).get('/api/auth/me').set('Authorization', 'Bearer token-falso')
+    expect(res.status).toBe(401)
+  })
 })
 
 describe('API productos: lectura publica, escritura solo admin', () => {

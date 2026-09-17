@@ -4,6 +4,22 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-17
+
+### Agregado
+- **App Android para el admin** (`../admin-app/`, React Native + Expo,
+  sibling de esta carpeta): reservas (detalle, cambio de estado, eliminar),
+  productos (alta/baja/edicion con foto desde la camara/galeria),
+  categorias, usuarios y reporte de ventas. Habla con esta misma API — ver
+  su propio README para como correrla y como generar un APK con EAS Build.
+- Backend: `requireAuth` acepta el token tambien por header
+  `Authorization: Bearer <token>` (antes solo cookie), porque una app
+  nativa no tiene cookie jar de navegador. `login`/`register` ahora
+  devuelven el token en el body de la respuesta ademas de setear la cookie
+  (la web lo sigue ignorando, solo lo usa la app movil).
+- 2 tests de integracion nuevos: login via Bearer funciona sin cookie, un
+  Bearer invalido da 401 igual que sin sesion (43 tests en total).
+
 ## 2026-09-16 (ultima del dia)
 
 ### Agregado

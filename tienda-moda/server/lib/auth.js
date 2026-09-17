@@ -1,7 +1,14 @@
-/* Autenticacion real del servidor: JWT firmado en una cookie httpOnly.
+/* Autenticacion real del servidor: JWT firmado.
    Antes de esto, "admin" era solo una pantalla que el cliente ocultaba —
    cualquiera que conociera la URL de la API podia llamarla sin loguearse.
-   Ahora cada ruta sensible verifica el rol en el servidor. */
+   Ahora cada ruta sensible verifica el rol en el servidor.
+
+   El token viaja de dos formas segun el cliente:
+   - Web: cookie httpOnly (no accesible por JS del navegador, mitiga XSS).
+   - App movil (React Native, sin cookie jar propia del sistema): header
+     `Authorization: Bearer <token>`. login/register devuelven el token en
+     el body de la respuesta ademas de setear la cookie, para que la app
+     lo guarde (ver admin-app/). requireAuth acepta cualquiera de las dos. */
 import jwt from 'jsonwebtoken'
 import { fail } from './http.js'
 
@@ -20,8 +27,8 @@ const isProd = !!process.env.VERCEL
 
 export const signToken = (user) => jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: TOKEN_TTL })
 
-export const setAuthCookie = (res, user) => {
-  res.cookie(COOKIE_NAME, signToken(user), {
+export const setAuthCookie = (res, token) => {
+  res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     secure: isProd,
     sameSite: 'lax',
@@ -34,9 +41,14 @@ export const clearAuthCookie = (res) => {
   res.clearCookie(COOKIE_NAME, { httpOnly: true, secure: isProd, sameSite: 'lax', path: '/' })
 }
 
-/** Exige sesion valida. Deja `req.user = { id, role }` (tal como estaba en el token). */
+const bearerToken = (req) => {
+  const header = req.headers.authorization || ''
+  return header.startsWith('Bearer ') ? header.slice(7) : null
+}
+
+/** Exige sesion valida (cookie o header Bearer). Deja `req.user = { id, role }`. */
 export const requireAuth = (req, _res, next) => {
-  const token = req.cookies?.[COOKIE_NAME]
+  const token = req.cookies?.[COOKIE_NAME] || bearerToken(req)
   if (!token) return next(fail(401, 'Necesitas iniciar sesion.'))
   try {
     const payload = jwt.verify(token, SECRET)

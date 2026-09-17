@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { query } from '../db.js'
 import { wrap, fail } from '../lib/http.js'
 import { mapUser } from '../lib/mappers.js'
-import { setAuthCookie, clearAuthCookie, requireAuth } from '../lib/auth.js'
+import { signToken, setAuthCookie, clearAuthCookie, requireAuth } from '../lib/auth.js'
 import { sendWelcomeEmail } from '../lib/email.js'
 
 export const authRouter = Router()
@@ -21,9 +21,10 @@ authRouter.post('/register', wrap(async (req, res) => {
       [name, email.toLowerCase(), hash],
     )
     const user = mapUser(rows[0])
-    setAuthCookie(res, user)
+    const token = signToken(user)
+    setAuthCookie(res, token) // web
     await sendWelcomeEmail(user) // nunca tira: si falla, solo queda logueado en el servidor
-    res.status(201).json(user)
+    res.status(201).json({ ...user, token }) // token en el body para la app movil (ver admin-app/)
   } catch (err) {
     if (err.code === '23505') throw fail(409, 'Ya existe una cuenta con ese email.')
     throw err
@@ -38,8 +39,9 @@ authRouter.post('/login', wrap(async (req, res) => {
     throw fail(401, 'Email o contrasena incorrectos.')
   }
   const user = mapUser(row)
-  setAuthCookie(res, user)
-  res.json(user)
+  const token = signToken(user)
+  setAuthCookie(res, token)
+  res.json({ ...user, token })
 }))
 
 authRouter.post('/logout', (_req, res) => {
@@ -48,7 +50,8 @@ authRouter.post('/logout', (_req, res) => {
 })
 
 // Sesion actual: el frontend la usa al cargar la app para saber si la cookie
-// sigue siendo valida (y traer datos frescos, ej. si un admin te cambio el rol).
+// (o, en la app movil, el token guardado) sigue siendo valida — y trae datos
+// frescos, ej. si un admin te cambio el rol.
 authRouter.get('/me', requireAuth, wrap(async (req, res) => {
   const { rows } = await query('SELECT * FROM users WHERE id=$1', [req.user.id])
   if (!rows.length) throw fail(401, 'Sesion invalida.')

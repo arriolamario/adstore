@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "AD Moda Admin",
+    "slug": "ad-moda-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.admodayconfort.admin"
+    },
+    "android": {
+      "package": "com.admodayconfort.admin",
+      "adaptiveIcon": {
+        "backgroundColor": "#a8583f",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Se usa para elegir la foto de un producto."
+        }
+      ]
+    ]
+  }
+}
