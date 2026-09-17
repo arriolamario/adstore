@@ -172,6 +172,25 @@ Tiene que estar en `.env` (local), `.env.test` (tests) y en las **Environment
 Variables del proyecto en Vercel** (produccion) — es una clave distinta en
 cada entorno, generada con `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 
+## Emails transaccionales
+
+`server/lib/email.js` manda bienvenida, confirmacion de reserva y avisos de
+cambio de estado via Resend. A diferencia de `DATABASE_URL`/`JWT_SECRET`,
+`RESEND_API_KEY` es **opcional y con degradacion elegante**: si no esta
+configurada, el modulo queda con `client = null` y cada intento de envio
+solo loguea y retorna — nunca lanza un error. Esto es deliberado: un email
+es una notificacion, no algo de lo que dependa que el registro o la reserva
+se completen. Los call-sites (`auth.routes.js`, `users.routes.js`,
+`orders.routes.js`) esperan (`await`) el envio antes de responder — importante
+en Vercel, donde una funcion serverless puede cortarse apenas se manda la
+respuesta, asi que un envio "fire and forget" sin esperar se arriesgaria a
+quedar a mitad de camino — pero como `send()` nunca tira, ese `await` no
+puede hacer fallar la request.
+
+Las plantillas (`welcomeEmailHtml`, `orderConfirmationHtml`,
+`orderStatusEmailHtml`) son funciones puras exportadas aparte, para poder
+testearlas sin red ni base de datos (`server/lib/email.test.js`).
+
 ## Deploy
 
 Ver la seccion "Deploy en Vercel" del `README.md`.

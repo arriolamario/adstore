@@ -99,6 +99,24 @@ Requiere la variable `JWT_SECRET` (ver `.env.example`). Generar una propia:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
+## Emails transaccionales
+
+Bienvenida (al registrarte o al crear un usuario desde el admin), confirmacion
+de reserva y aviso de cambio de estado — via [Resend](https://resend.com).
+**Es opcional**: sin `RESEND_API_KEY` configurada, el servidor simplemente
+omite el envio (queda un log en la consola) — el registro y las reservas
+funcionan igual.
+
+1. Cuenta gratis en [resend.com](https://resend.com) (plan gratis: 3.000
+   emails/mes) y generar una API key.
+2. Completar en `.env` (local) y en las Environment Variables de Vercel
+   (produccion): `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (por defecto usa el
+   dominio de pruebas de Resend) y `SITE_URL` (para los links dentro del
+   email — en Vercel, la URL publica del sitio).
+3. Para mandar desde tu propio dominio (`no-reply@tudominio.com` en vez del
+   dominio de pruebas) hay que verificarlo en Resend (agrega unos registros
+   DNS) y actualizar `RESEND_FROM_EMAIL`.
+
 ## Usuarios de prueba
 
 | Rol       | Email                | Password   |
@@ -136,7 +154,7 @@ api/
 
 server/
 ├── db.js         # pool de conexion a Postgres (Neon) + helper de transacciones
-├── lib/          # http.js (wrap/fail), mappers.js (DB -> shape del frontend)
+├── lib/          # http.js (wrap/fail), mappers.js (DB -> frontend), auth.js (JWT), stock.js, email.js (Resend)
 ├── routes/       # un router por recurso: products, categories, auth, users, orders
 ├── schema.sql    # DROP + CREATE de users / products / orders
 ├── migrate.js    # corre schema.sql y siembra catalogo + admin (npm run db:reset)

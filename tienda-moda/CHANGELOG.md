@@ -4,6 +4,20 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16 (mas noche aun)
+
+### Agregado
+- **Emails transaccionales via Resend** (`server/lib/email.js`): bienvenida
+  (registro propio o alta desde el admin), confirmacion al crear una reserva,
+  y aviso cada vez que el admin cambia el estado de una reserva.
+- Opcional por diseno: sin `RESEND_API_KEY` el envio se omite (con un log),
+  nunca rompe el registro ni la reserva. Nuevas variables de entorno:
+  `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SITE_URL` (para los links dentro
+  del email) — a diferencia de `DATABASE_URL`/`JWT_SECRET`, ninguna es
+  obligatoria para que el servidor arranque.
+- 5 tests nuevos (`server/lib/email.test.js`) sobre las plantillas de email
+  (funciones puras, sin red).
+
 ## 2026-09-16 (noche)
 
 ### Agregado

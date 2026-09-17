@@ -4,6 +4,7 @@ import { query } from '../db.js'
 import { wrap, fail } from '../lib/http.js'
 import { mapUser } from '../lib/mappers.js'
 import { requireAdmin, requireSelfOrAdmin } from '../lib/auth.js'
+import { sendWelcomeEmail } from '../lib/email.js'
 
 export const usersRouter = Router()
 
@@ -31,7 +32,9 @@ usersRouter.post('/', requireAdmin, wrap(async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [name, email.toLowerCase(), hash, role === 'admin' ? 'admin' : 'customer', phone || '', address || ''],
     )
-    res.status(201).json(mapUser(rows[0]))
+    const user = mapUser(rows[0])
+    await sendWelcomeEmail(user) // nunca tira: el alta ya se hizo igual
+    res.status(201).json(user)
   } catch (err) {
     if (err.code === '23505') throw fail(409, 'Ya existe una cuenta con ese email.')
     throw err

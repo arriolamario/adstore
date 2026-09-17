@@ -4,6 +4,7 @@ import { query } from '../db.js'
 import { wrap, fail } from '../lib/http.js'
 import { mapUser } from '../lib/mappers.js'
 import { setAuthCookie, clearAuthCookie, requireAuth } from '../lib/auth.js'
+import { sendWelcomeEmail } from '../lib/email.js'
 
 export const authRouter = Router()
 
@@ -21,6 +22,7 @@ authRouter.post('/register', wrap(async (req, res) => {
     )
     const user = mapUser(rows[0])
     setAuthCookie(res, user)
+    await sendWelcomeEmail(user) // nunca tira: si falla, solo queda logueado en el servidor
     res.status(201).json(user)
   } catch (err) {
     if (err.code === '23505') throw fail(409, 'Ya existe una cuenta con ese email.')

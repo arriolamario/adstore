@@ -4,6 +4,7 @@ import { wrap, fail } from '../lib/http.js'
 import { mapOrder } from '../lib/mappers.js'
 import { requireAuth, requireAdmin } from '../lib/auth.js'
 import { adjustStockForItems } from '../lib/stock.js'
+import { sendOrderConfirmationEmail, sendOrderStatusEmail } from '../lib/email.js'
 import { addBusinessDays, uid } from '../../src/lib/format.js'
 
 export const ordersRouter = Router()
@@ -55,7 +56,9 @@ ordersRouter.post('/', requireAuth, wrap(async (req, res) => {
     return rows[0]
   })
 
-  res.status(201).json(mapOrder(order))
+  const mapped = mapOrder(order)
+  await sendOrderConfirmationEmail(mapped) // nunca tira: la reserva ya esta confirmada igual
+  res.status(201).json(mapped)
 }))
 
 // Cambia el estado. Al cancelar repone stock; al reactivar una cancelada lo vuelve a descontar.
@@ -71,9 +74,12 @@ ordersRouter.patch('/:id/status', requireAdmin, wrap(async (req, res) => {
     if (prev === 'cancelado' && status !== 'cancelado') await adjustStockForItems(client, items, -1)
 
     const upd = await client.query('UPDATE orders SET status=$2 WHERE id=$1 RETURNING *', [req.params.id, status])
-    return upd.rows[0]
+    return { row: upd.rows[0], changed: prev !== status }
   })
-  res.json(mapOrder(order))
+
+  const mapped = mapOrder(order.row)
+  if (order.changed) await sendOrderStatusEmail(mapped) // solo si de verdad cambio (evita spam)
+  res.json(mapped)
 }))
 
 // Elimina la reserva. Si el stock seguia "tomado" por ella (cualquier estado
