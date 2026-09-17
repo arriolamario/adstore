@@ -5,6 +5,7 @@ import Field from '../components/ui/Field'
 import EmptyState from '../components/ui/EmptyState'
 import { currency, formatDate } from '../lib/format'
 import { sanitizePhone, isValidPhone } from '../lib/validation'
+import { whatsappLinkWithMessage, orderWhatsAppMessage } from '../lib/contact'
 import { useCart } from '../context/CartContext'
 import { useCatalog } from '../context/CatalogContext'
 import { useAuth } from '../context/AuthContext'
@@ -42,9 +43,17 @@ export default function CheckoutPage() {
           <p className="text-soft">
             Fecha estimada disponible: <strong>{formatDate(done.estimatedReadyAt)}</strong>
           </p>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button
+              href={whatsappLinkWithMessage(orderWhatsAppMessage(done))}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+            >
+              Avisanos por WhatsApp
+            </Button>
             <Button to="/cuenta/pedidos">Ver mis pedidos</Button>
-            <Button to="/catalogo" variant="secondary">Seguir explorando</Button>
+            <Button to="/catalogo" variant="ghost">Seguir explorando</Button>
           </div>
         </div>
       </div>

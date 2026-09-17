@@ -4,6 +4,23 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-16 (ultima del dia)
+
+### Agregado
+- Boton "Avisanos por WhatsApp" en la pantalla de reserva confirmada: abre
+  WhatsApp con un mensaje prellenado (codigo de reserva, retiro/envio) para
+  que el cliente se lo mande a la tienda con un toque.
+- `src/lib/contact.js`: numero de WhatsApp, Instagram y los helpers para
+  armar links con mensaje prellenado, en un solo lugar (antes estaba
+  duplicado en Footer y CTASection).
+- 3 tests unitarios nuevos (`src/lib/contact.test.js`).
+
+### Nota
+- Esto **no es una notificacion automatica**: el cliente tiene que tocar
+  "Enviar" en WhatsApp. Un envio automatico de verdad requiere la API
+  oficial de WhatsApp Business de Meta, que tiene costo por mensaje y
+  requiere verificar el negocio — se evaluara por separado si hace falta.
+
 ## 2026-09-16 (mas noche aun)
 
 ### Agregado

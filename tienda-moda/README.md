@@ -129,6 +129,9 @@ funcionan igual.
   al checkout con el carrito intacto. Checkout con envio o retiro, historial de
   pedidos con estado y edicion de perfil. El telefono y la direccion cargados en
   el checkout se guardan en el perfil, asi la proxima reserva ya viene precargada.
+  Al confirmar, un boton abre WhatsApp con un mensaje prellenado para avisarle
+  a la tienda (no es automatico: el cliente tiene que tocar Enviar — ver
+  `src/lib/contact.js`).
 - **Admin**: `/admin` → alta/baja/edicion de stock **por talle**, carga de imagenes
   por producto (archivo o URL), **Categorias** (crear, renombrar y eliminar — no
   se puede eliminar una categoria con productos), **Usuarios** (alta/baja/edicion,

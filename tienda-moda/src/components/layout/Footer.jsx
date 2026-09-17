@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
-
-const INSTAGRAM_URL = 'https://instagram.com/ad.modayconfort'
-const WHATSAPP_URL = 'https://wa.me/5492664325416'
+import { WHATSAPP_URL, INSTAGRAM_URL } from '../../lib/contact'
 
 export default function Footer() {
   return (

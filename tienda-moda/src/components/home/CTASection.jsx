@@ -1,6 +1,5 @@
 import Button from '../ui/Button'
-
-const WHATSAPP_URL = 'https://wa.me/5492664325416'
+import { WHATSAPP_URL } from '../../lib/contact'
 
 export default function CTASection() {
   return (
