@@ -4,6 +4,17 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-09-17 (mas tarde)
+
+### Agregado
+- `postman/`: coleccion de Postman lista para importar (Auth, Productos,
+  Categorias, Usuarios, Reservas) + un environment para local. El login
+  guarda el token solo (via script de test) y el resto de los requests lo
+  usan automaticamente como Bearer — no hay que tocar headers a mano. Los
+  requests de "Crear" encadenan el id creado a los de editar/eliminar.
+  Probado de punta a punta contra la API local (login -> crear categoria
+  -> crear producto -> crear reserva -> cambiar estado -> eliminar todo).
+
 ## 2026-09-17
 
 ### Agregado

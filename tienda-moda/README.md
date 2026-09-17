@@ -18,6 +18,8 @@ Hay tambien una **app Android para el admin** en [`../admin-app/`](../admin-app/
 - [TESTING.md](TESTING.md) — como correr los tests y que cubren.
 - [CHANGELOG.md](CHANGELOG.md) — registro de cambios notables, actualizado en
   cada cambio con logica relevante.
+- [postman/README.md](postman/README.md) — coleccion de Postman para probar
+  la API a mano (login con Bearer token, todos los endpoints).
 
 ## Deploy en Vercel
 
