@@ -3,7 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import Field from '../../components/ui/Field'
 import { stockKey } from '../../lib/inventory'
+import { compressImageFile, dataUrlSize } from '../../lib/image'
 import { useCatalog } from '../../context/CatalogContext'
+
+// Limite duro de Vercel para el body de una funcion serverless (ver README).
+// Dejamos margen para el resto del JSON (nombre, stock, etc).
+const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024
 
 const BLANK = {
   name: '', brand: '', category: 'Zapatillas', price: 0,
@@ -48,12 +53,15 @@ export default function AdminProductForm() {
   const setSizeStock = (size, color, value) =>
     setForm((f) => ({ ...f, stock: { ...f.stock, [stockKey(size, color)]: Math.max(0, Number(value) || 0) } }))
 
-  const onFile = (e) => {
+  const onFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setForm((f) => ({ ...f, image: reader.result }))
-    reader.readAsDataURL(file)
+    try {
+      const dataUrl = await compressImageFile(file)
+      setForm((f) => ({ ...f, image: dataUrl }))
+    } catch {
+      setError('No se pudo procesar la imagen. Proba con otra foto.')
+    }
   }
 
   const addColor = () => setForm((f) => ({ ...f, colors: [...f.colors, { name: '', image: '' }] }))
@@ -61,14 +69,17 @@ export default function AdminProductForm() {
   const setColorName = (idx, name) => setForm((f) => ({
     ...f, colors: f.colors.map((c, i) => (i === idx ? { ...c, name } : c)),
   }))
-  const setColorImage = (idx, e) => {
+  const setColorImage = async (idx, e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setForm((f) => ({
-      ...f, colors: f.colors.map((c, i) => (i === idx ? { ...c, image: reader.result } : c)),
-    }))
-    reader.readAsDataURL(file)
+    try {
+      const dataUrl = await compressImageFile(file)
+      setForm((f) => ({
+        ...f, colors: f.colors.map((c, i) => (i === idx ? { ...c, image: dataUrl } : c)),
+      }))
+    } catch {
+      setError('No se pudo procesar la imagen. Proba con otra foto.')
+    }
   }
 
   const colorNames = useColors ? form.colors.map((c) => c.name.trim()).filter(Boolean) : []
@@ -78,6 +89,10 @@ export default function AdminProductForm() {
     setError('')
     if (useColors && form.colors.some((c) => !c.name.trim())) {
       return setError('Todos los colores necesitan un nombre (o quitalos).')
+    }
+    const imagesWeight = dataUrlSize(form.image) + (useColors ? form.colors.reduce((n, c) => n + dataUrlSize(c.image), 0) : 0)
+    if (imagesWeight > MAX_PAYLOAD_BYTES) {
+      return setError('Las fotos pesan demasiado en conjunto. Elegi menos colores o fotos mas livianas.')
     }
     setBusy(true)
     const stock = isStock

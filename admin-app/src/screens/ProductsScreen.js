@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
 import Field from '../components/Field'
@@ -10,6 +11,17 @@ import { colors, radius } from '../lib/theme'
 import { currency } from '../lib/format'
 import { totalStock, stockKey } from '../lib/inventory'
 import { api } from '../lib/api'
+
+// Deja margen bajo el limite duro de 4.5 MB que Vercel impone al body de una
+// funcion serverless (no configurable desde el codigo del backend).
+const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024
+
+const dataUrlSize = (dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== 'string') return 0
+  const base64 = dataUrl.split(',')[1] || ''
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0
+  return Math.floor((base64.length * 3) / 4) - padding
+}
 
 const BLANK = { name: '', brand: '', category: '', price: '', availability: 'stock', sizes: '', colors: [], stock: {}, image: '', description: '', hidden: false }
 
@@ -141,9 +153,16 @@ function ProductFormModal({ visible, product, categories, onClose, onSaved, onDe
   const pickImage = async (onPicked) => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!perm.granted) return Alert.alert('Permiso necesario', 'Se necesita acceso a la galeria.')
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], base64: true, quality: 0.6 })
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })
     if (result.canceled) return
-    onPicked(`data:image/jpeg;base64,${result.assets[0].base64}`)
+    // Vercel rechaza (413) cualquier request de mas de 4.5 MB al backend; una
+    // foto de camara sin redimensionar + base64 (+33%) supera eso facil.
+    const resized = await ImageManipulator.manipulateAsync(
+      result.assets[0].uri,
+      [{ resize: { width: 1200 } }],
+      { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+    )
+    onPicked(`data:image/jpeg;base64,${resized.base64}`)
   }
 
   const addColor = () => setForm((f) => ({ ...f, colors: [...(f.colors || []), { name: '', image: '' }] }))
@@ -159,6 +178,10 @@ function ProductFormModal({ visible, product, categories, onClose, onSaved, onDe
     if (!form.name?.trim()) return setError('El nombre es obligatorio.')
     if (useColors && (form.colors || []).some((c) => !c.name.trim())) {
       return setError('Todos los colores necesitan un nombre (o quitalos).')
+    }
+    const imagesWeight = dataUrlSize(form.image) + (useColors ? (form.colors || []).reduce((n, c) => n + dataUrlSize(c.image), 0) : 0)
+    if (imagesWeight > MAX_PAYLOAD_BYTES) {
+      return setError('Las fotos pesan demasiado en conjunto. Elegi menos colores o fotos mas livianas.')
     }
     setBusy(true)
     try {

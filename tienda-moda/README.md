@@ -37,6 +37,16 @@ configurar en el proyecto de Vercel (Settings del proyecto, no en el codigo):
    nunca se sube al repo. **Sin `JWT_SECRET` el servidor no arranca.**
 4. Volver a desplegar (Redeploy) despues de guardar esos cambios.
 
+**Limite de tamano de las fotos**: las funciones serverless de Vercel
+rechazan (413 `FUNCTION_PAYLOAD_TOO_LARGE`) cualquier request de mas de
+~4.5 MB — es un limite de la plataforma, no configurable desde el codigo.
+Como las fotos de producto se mandan como base64 dentro del JSON, el
+formulario de alta/edicion (sitio y app Android) **comprime y redimensiona
+la imagen antes de enviarla** (`src/lib/image.js` en el sitio,
+`expo-image-manipulator` en la app) y valida el peso total antes de
+mandar el request. `server/app.js` limita el body a 4mb para que un
+payload que no entra se note tambien en local, no solo en produccion.
+
 ## Base de datos local
 
 El desarrollo local usa **Postgres instalado en tu maquina**, no Neon

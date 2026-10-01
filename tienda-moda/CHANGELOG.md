@@ -4,6 +4,29 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-10-01 (mas tarde aun)
+
+### Arreglado
+- **Error al crear/editar un producto en produccion** (`FUNCTION_PAYLOAD_TOO_LARGE`
+  / 413 en Vercel) cuando la foto (o varias, con colores) pesaba demasiado.
+  Vercel rechaza el body de una funcion serverless por encima de ~4.5 MB y
+  eso no se puede configurar desde el codigo — las fotos de camara en base64
+  (sin comprimir, +33% por la codificacion) lo superaban facil en producto
+  con varios colores, aunque funcionaba en local.
+  - Nuevo `src/lib/image.js` (`compressImageFile`): redimensiona (max 1200px)
+    y recomprime a JPEG antes de convertir a base64, tanto en la foto de
+    portada como en la de cada color (`AdminProductForm.jsx`).
+    `dataUrlSize` estima el peso real para validar antes de enviar.
+  - Mismo fix en la app Android (`admin-app/src/screens/ProductsScreen.js`)
+    con `expo-image-manipulator` (nueva dependencia): redimensiona a 1200px
+    de ancho y comprime a calidad 0.6 antes de armar el data URI.
+  - El formulario (web y app) ahora valida el peso total de las imagenes
+    **antes** de enviar y muestra un error claro en vez de que falle el
+    request contra el backend.
+  - `server/app.js`: el limite de `express.json` baja de 12mb a 4mb, para
+    que el comportamiento en local coincida con el techo real de Vercel
+    (antes, un payload grande pasaba en local y recien fallaba en produccion).
+
 ## 2026-10-01 (mas tarde)
 
 ### Agregado

@@ -14,7 +14,11 @@ import { ordersRouter } from './routes/orders.routes.js'
 const app = express()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-app.use(express.json({ limit: '12mb' })) // imagenes en base64
+// 4mb: deja margen bajo el limite duro de 4.5 MB que Vercel impone al body de
+// una funcion serverless (no configurable desde el codigo). Las imagenes se
+// comprimen en el cliente antes de mandarse (ver src/lib/image.js) para no
+// pisar este techo.
+app.use(express.json({ limit: '4mb' })) // imagenes en base64
 app.use(cookieParser())
 
 app.use('/api/products', productsRouter)
