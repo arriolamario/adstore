@@ -11,7 +11,7 @@ import { currency } from '../lib/format'
 import { totalStock, stockKey } from '../lib/inventory'
 import { api } from '../lib/api'
 
-const BLANK = { name: '', brand: '', category: '', price: '', availability: 'stock', sizes: '', colors: [], stock: {}, image: '', description: '' }
+const BLANK = { name: '', brand: '', category: '', price: '', availability: 'stock', sizes: '', colors: [], stock: {}, image: '', description: '', hidden: false }
 
 export default function ProductsScreen() {
   const [products, setProducts] = useState([])
@@ -38,6 +38,15 @@ export default function ProductsScreen() {
 
   const openNew = () => setEditing({ ...BLANK })
   const openEdit = (p) => setEditing({ ...p, sizes: (p.sizes || []).join(', '), colors: p.colors || [], price: String(p.price) })
+
+  const toggleHidden = async (p) => {
+    try {
+      await api.products.update(p.id, { ...p, hidden: !p.hidden })
+      await load()
+    } catch (err) {
+      Alert.alert('Error', err.message)
+    }
+  }
 
   const remove = (p) => {
     Alert.alert('Eliminar producto', `Eliminar "${p.name}"?`, [
@@ -73,8 +82,8 @@ export default function ProductsScreen() {
       />
 
       {visible.map((p) => (
-        <Pressable key={p.id} onPress={() => openEdit(p)}>
-          <Card style={styles.row}>
+        <Card key={p.id} style={styles.row}>
+          <Pressable onPress={() => openEdit(p)} style={{ flexDirection: 'row', flex: 1, gap: 12, alignItems: 'center' }}>
             {p.image ? <Image source={{ uri: p.image }} style={styles.thumb} /> : <View style={styles.thumb} />}
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{p.name}</Text>
@@ -83,15 +92,21 @@ export default function ProductsScreen() {
               </Text>
               <View style={styles.rowBetween}>
                 <Text style={styles.price}>{currency(p.price)}</Text>
-                {p.availability === 'stock' ? (
-                  <Badge label={`Stock: ${totalStock(p)}`} tone={totalStock(p) > 0 ? 'success' : 'danger'} />
-                ) : (
-                  <Badge label="A pedido" tone="warning" />
-                )}
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {p.hidden && <Badge label="Oculto" tone="warning" />}
+                  {p.availability === 'stock' ? (
+                    <Badge label={`Stock: ${totalStock(p)}`} tone={totalStock(p) > 0 ? 'success' : 'danger'} />
+                  ) : (
+                    <Badge label="A pedido" tone="warning" />
+                  )}
+                </View>
               </View>
             </View>
-          </Card>
-        </Pressable>
+          </Pressable>
+          <Pressable onPress={() => toggleHidden(p)} style={{ paddingLeft: 10 }}>
+            <Text style={styles.toggleLink}>{p.hidden ? 'Mostrar' : 'Ocultar'}</Text>
+          </Pressable>
+        </Card>
       ))}
 
       <ProductFormModal
@@ -284,6 +299,11 @@ function ProductFormModal({ visible, product, categories, onClose, onSaved, onDe
           </>
         )}
 
+        <View style={styles.switchRow}>
+          <Text style={styles.fieldLabel}>Ocultar del catalogo publico</Text>
+          <Switch value={!!form.hidden} onValueChange={set('hidden')} trackColor={{ true: colors.brand600 }} />
+        </View>
+
         <Field label="Descripcion" value={form.description} onChangeText={set('description')} multiline />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -308,6 +328,7 @@ const styles = StyleSheet.create({
   meta: { fontSize: 12, color: colors.textMuted, marginBottom: 4 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   price: { fontWeight: '700', color: colors.text },
+  toggleLink: { fontSize: 12, fontWeight: '700', color: colors.brand600 },
   modalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   close: { fontSize: 20, color: colors.textSoft, padding: 8 },
   imagePicker: {

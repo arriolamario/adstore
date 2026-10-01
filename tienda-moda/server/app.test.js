@@ -132,6 +132,40 @@ describe('API productos: lectura publica, escritura solo admin', () => {
     const del = await adminAgent.delete(`/api/products/${create.body.id}`)
     expect(del.status).toBe(200)
   })
+
+  it('un producto oculto no aparece en el catalogo publico, pero si para el admin con ?all=true', async () => {
+    const create = await adminAgent.post('/api/products').send({
+      name: 'Producto Oculto', brand: 'Test', category: 'Zapatillas', price: 1000,
+      availability: 'stock', sizes: ['40'], stock: { 40: 3 }, image: '', description: '', hidden: true,
+    })
+    expect(create.status).toBe(201)
+    expect(create.body.hidden).toBe(true)
+
+    const publicList = await request(app).get('/api/products')
+    expect(publicList.body.some((p) => p.id === create.body.id)).toBe(false)
+
+    const customerList = await customerAgent.get('/api/products?all=true')
+    expect(customerList.body.some((p) => p.id === create.body.id)).toBe(false) // no-admin: se ignora ?all=true
+
+    const adminList = await adminAgent.get('/api/products?all=true')
+    expect(adminList.body.some((p) => p.id === create.body.id)).toBe(true)
+
+    await adminAgent.delete(`/api/products/${create.body.id}`)
+  })
+
+  it('editar un producto para sacarle hidden lo vuelve a mostrar en el catalogo publico', async () => {
+    const create = await adminAgent.post('/api/products').send({
+      name: 'Producto Oculto 2', brand: 'Test', category: 'Zapatillas', price: 1000,
+      availability: 'stock', sizes: ['40'], stock: { 40: 3 }, image: '', description: '', hidden: true,
+    })
+
+    await adminAgent.put(`/api/products/${create.body.id}`).send({ ...create.body, hidden: false })
+
+    const publicList = await request(app).get('/api/products')
+    expect(publicList.body.some((p) => p.id === create.body.id)).toBe(true)
+
+    await adminAgent.delete(`/api/products/${create.body.id}`)
+  })
 })
 
 describe('API categorias: lectura publica, escritura solo admin', () => {

@@ -18,7 +18,10 @@ const body = (payload) => JSON.stringify(payload)
 
 export const api = {
   products: {
-    list: () => request('/api/products'),
+    // includeHidden solo tiene efecto si quien pregunta es admin (lo
+    // verifica el servidor); un visitante normal siempre recibe el
+    // catalogo sin los productos ocultos, pida lo que pida.
+    list: (includeHidden) => request('/api/products' + (includeHidden ? '?all=true' : '')),
     create: (data) => request('/api/products', { method: 'POST', body: body(data) }),
     update: (id, data) => request(`/api/products/${id}`, { method: 'PUT', body: body(data) }),
     remove: (id) => request(`/api/products/${id}`, { method: 'DELETE' }),

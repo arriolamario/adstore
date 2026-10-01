@@ -46,17 +46,27 @@ const bearerToken = (req) => {
   return header.startsWith('Bearer ') ? header.slice(7) : null
 }
 
-/** Exige sesion valida (cookie o header Bearer). Deja `req.user = { id, role }`. */
-export const requireAuth = (req, _res, next) => {
+/** Decodifica el token si hay uno valido (cookie o Bearer); null si no hay
+    sesion o es invalida. A diferencia de requireAuth, NUNCA bloquea el
+    request — para rutas publicas que quieren portarse distinto si quien
+    pregunta resulta ser admin (ej. GET /api/products?all=true). */
+export const getOptionalUser = (req) => {
   const token = req.cookies?.[COOKIE_NAME] || bearerToken(req)
-  if (!token) return next(fail(401, 'Necesitas iniciar sesion.'))
+  if (!token) return null
   try {
     const payload = jwt.verify(token, SECRET)
-    req.user = { id: payload.id, role: payload.role }
-    next()
+    return { id: payload.id, role: payload.role }
   } catch {
-    next(fail(401, 'Sesion invalida o vencida.'))
+    return null
   }
+}
+
+/** Exige sesion valida (cookie o header Bearer). Deja `req.user = { id, role }`. */
+export const requireAuth = (req, _res, next) => {
+  const user = getOptionalUser(req)
+  if (!user) return next(fail(401, 'Necesitas iniciar sesion.'))
+  req.user = user
+  next()
 }
 
 /** Exige sesion valida Y rol admin. */

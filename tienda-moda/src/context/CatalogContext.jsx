@@ -1,18 +1,24 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { api } from '../lib/api'
+import { useAuth } from './AuthContext'
 
 const CatalogContext = createContext(null)
 
 export function CatalogProvider({ children }) {
+  const { isAdmin } = useAuth()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([]) // nombres (string[]) — el CRUD completo vive en /admin/categorias
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Un admin logueado ve tambien los productos ocultos (en el catalogo
+  // publico y en /admin) — asi puede previsualizarlos antes de publicarlos
+  // sin necesitar una pantalla aparte. El servidor es quien decide esto de
+  // verdad (ver server/routes/products.routes.js); isAdmin solo arma el pedido.
   const refresh = useCallback(async () => {
     try {
       setError(null)
-      const [productList, categoryList] = await Promise.all([api.products.list(), api.categories.list()])
+      const [productList, categoryList] = await Promise.all([api.products.list(isAdmin), api.categories.list()])
       setProducts(productList)
       setCategories(categoryList.map((c) => c.name))
     } catch (err) {
@@ -20,7 +26,7 @@ export function CatalogProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => { refresh() }, [refresh])
 

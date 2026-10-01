@@ -137,11 +137,15 @@ funcionan igual.
   Al confirmar, un boton abre WhatsApp con un mensaje prellenado para avisarle
   a la tienda (no es automatico: el cliente tiene que tocar Enviar — ver
   `src/lib/contact.js`).
-- **Admin**: `/admin` → alta/baja/edicion de stock **por talle**, carga de imagenes
-  por producto (archivo o URL), **Categorias** (crear, renombrar y eliminar — no
-  se puede eliminar una categoria con productos), **Usuarios** (alta/baja/edicion,
-  cambio de rol y reseteo de contrasena), **Reservas** (cambiar el estado de cada
-  reserva, ver el detalle completo) y reporte de ventas.
+- **Admin**: `/admin` → alta/baja/edicion de stock **por talle** (y por color,
+  si el producto usa variantes de color), carga de imagenes por producto
+  (archivo o URL, una por color si corresponde), **ocultar un producto del
+  catalogo publico sin borrarlo** (mantiene stock e historial — el admin lo
+  sigue viendo, los visitantes no), **Categorias** (crear, renombrar y
+  eliminar — no se puede eliminar una categoria con productos), **Usuarios**
+  (alta/baja/edicion, cambio de rol y reseteo de contrasena), **Reservas**
+  (cambiar el estado de cada reserva, ver el detalle completo) y reporte de
+  ventas.
 
 ### Stock y estados de reserva
 

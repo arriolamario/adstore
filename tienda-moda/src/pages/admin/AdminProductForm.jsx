@@ -7,7 +7,7 @@ import { useCatalog } from '../../context/CatalogContext'
 
 const BLANK = {
   name: '', brand: '', category: 'Zapatillas', price: 0,
-  availability: 'stock', stock: {}, sizes: '', colors: [], image: '', description: '',
+  availability: 'stock', stock: {}, sizes: '', colors: [], image: '', description: '', hidden: false,
 }
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1519415943484-9fa1873496d4?auto=format&fit=crop&w=800&q=70'
@@ -242,6 +242,21 @@ export default function AdminProductForm() {
             </>
           )}
         </div>
+      )}
+
+      <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <input
+          type="checkbox"
+          checked={!!form.hidden}
+          onChange={(e) => setForm((f) => ({ ...f, hidden: e.target.checked }))}
+        />
+        <span style={{ fontWeight: 600, fontSize: 'var(--fs-sm)' }}>Ocultar del catalogo publico</span>
+      </label>
+      {form.hidden && (
+        <p className="hint" style={{ marginTop: '-0.75rem', marginBottom: 'var(--space-4)' }}>
+          No aparece en la tienda para los visitantes; vos seguis viendolo en el admin y podes reservarlo igual
+          (por si es para un cliente puntual).
+        </p>
       )}
 
       <Field as="textarea" label="Descripcion" name="description" value={form.description} onChange={set('description')} />

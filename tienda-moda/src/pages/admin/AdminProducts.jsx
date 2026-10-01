@@ -6,7 +6,7 @@ import { totalStock } from '../../lib/inventory'
 import { useCatalog } from '../../context/CatalogContext'
 
 export default function AdminProducts() {
-  const { products, loading, deleteProduct, resetCatalog } = useCatalog()
+  const { products, loading, saveProduct, deleteProduct, resetCatalog } = useCatalog()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [msg, setMsg] = useState('')
@@ -50,6 +50,7 @@ export default function AdminProducts() {
               <th>Precio</th>
               <th>Disponibilidad</th>
               <th>Stock</th>
+              <th>Visibilidad</th>
               <th></th>
             </tr>
           </thead>
@@ -76,8 +77,19 @@ export default function AdminProducts() {
                   {p.availability === 'stock' ? totalStock(p) : '—'}
                   {p.colors?.length > 0 && <span className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}> ({p.colors.length} colores)</span>}
                 </td>
+                <td>
+                  <span className={`badge ${p.hidden ? 'badge--order' : 'badge--stock'}`}>
+                    {p.hidden ? 'Oculto' : 'Visible'}
+                  </span>
+                </td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn btn--ghost btn--sm" onClick={() => navigate(`/admin/producto/${p.id}`)}>Editar</button>
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => run(() => saveProduct({ ...p, hidden: !p.hidden }))()}
+                  >
+                    {p.hidden ? 'Mostrar' : 'Ocultar'}
+                  </button>
                   <button className="btn btn--ghost btn--sm" onClick={() => { if (confirm(`Eliminar "${p.name}"?`)) run(() => deleteProduct(p.id))() }}>Eliminar</button>
                 </td>
               </tr>

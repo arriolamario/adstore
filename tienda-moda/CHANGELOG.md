@@ -4,6 +4,32 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-10-01 (mas tarde)
+
+### Agregado
+- **Ocultar un producto del catalogo publico** sin borrarlo (mantiene
+  stock e historial). Nueva columna `products.hidden` (boolean).
+  `GET /api/products` la filtra por defecto; un admin autenticado puede
+  pedir `?all=true` para verlos tambien (el servidor ignora ese parametro
+  si quien lo pide no es admin).
+- Un admin logueado ve los productos ocultos **tambien en el catalogo
+  publico del sitio** (no solo en `/admin`) — sirve como previsualizacion
+  antes de publicar. Se marcan con una etiqueta "Oculto (solo vos lo ves)".
+- Admin > Productos: columna "Visibilidad" + boton Ocultar/Mostrar por
+  fila (sin abrir el formulario), y un checkbox en el alta/edicion.
+- App Android: mismo toggle rapido en la lista y un switch en el formulario.
+- 2 tests de integracion nuevos: un producto oculto no aparece en el
+  catalogo publico pero si para el admin con `?all=true`; un comprador que
+  manda `?all=true` lo sigue sin ver (el servidor lo ignora).
+
+### Cambiado
+- `server/lib/auth.js`: se agrego `getOptionalUser` (decodifica el token si
+  hay uno valido, sin bloquear el request si no lo hay) — lo usa la ruta
+  publica de productos para decidir si incluir los ocultos. `requireAuth`
+  se reescribio para reusarlo en vez de duplicar la logica de decodificar.
+- `admin-app/app.json`: se quito el permiso `RECORD_AUDIO` — quedo cargado
+  sin uso real en la app (nada graba audio).
+
 ## 2026-10-01
 
 ### Agregado

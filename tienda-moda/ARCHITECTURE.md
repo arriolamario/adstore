@@ -122,7 +122,7 @@ Para evitar dudas de "donde vive cada dato":
 
 | Dato | Vive en | Por que |
 |---|---|---|
-| Catalogo de productos | Postgres (`products`) | Fuente de verdad compartida por todos |
+| Catalogo de productos | Postgres (`products`) | Fuente de verdad compartida por todos. `products.hidden` saca un producto del catalogo publico sin borrarlo; `GET /api/products` lo filtra salvo que lo pida un admin con `?all=true` (`server/lib/auth.js#getOptionalUser`, `server/routes/products.routes.js`) |
 | Categorias | Postgres (`categories`) | Administrables desde `/admin/categorias`. `products.category` sigue siendo texto libre (no una FK) para no migrar datos existentes; renombrar una categoria actualiza en la misma transaccion los productos que la usaban, y no se puede eliminar una categoria con productos (`server/routes/categories.routes.js`) |
 | Reservas confirmadas | Postgres (`orders`) | Idem, y necesitan transacciones (stock) |
 | Usuarios | Postgres (`users`) | Idem |
@@ -183,6 +183,7 @@ Cada ruta declara explicitamente que necesita, con los middlewares de
 | `requireAuth` | sesion valida (cualquier rol) | `POST /api/orders` (el dueno es siempre `req.user.id`, nunca lo que mande el body), `GET /api/orders` (un comprador solo ve las propias) |
 | `requireAdmin` | sesion valida + `role === 'admin'` | Mutaciones de productos y categorias, `GET/POST/DELETE /api/users`, `PATCH /api/orders/:id/status`, `DELETE /api/orders/:id` |
 | `requireSelfOrAdmin('id')` | sesion valida + (dueno del `:id` o admin) | `GET/PUT /api/users/:id` (tu perfil, o cualquiera si sos admin) |
+| `getOptionalUser` (no es middleware, es una funcion) | nada — nunca bloquea | `GET /api/products`: decodifica el token si hay uno valido, para decidir si mostrar los ocultos (`?all=true` + admin), pero la ruta sigue siendo publica igual sin sesion |
 
 El token viaja de dos formas segun el cliente, y `requireAuth` acepta
 cualquiera de las dos (revisa la cookie primero, despues el header):

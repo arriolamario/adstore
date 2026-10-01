@@ -27,7 +27,9 @@ export const api = {
     me: () => request('/api/auth/me'),
   },
   products: {
-    list: () => request('/api/products'),
+    // ?all=true: esta app es solo para admins, asi que siempre pide el
+    // catalogo completo (incluidos los ocultos del catalogo publico).
+    list: () => request('/api/products?all=true'),
     create: (data) => request('/api/products', { method: 'POST', body: body(data) }),
     update: (id, data) => request(`/api/products/${id}`, { method: 'PUT', body: body(data) }),
     remove: (id) => request(`/api/products/${id}`, { method: 'DELETE' }),

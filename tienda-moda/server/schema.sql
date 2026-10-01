@@ -43,6 +43,10 @@ CREATE TABLE products (
   stock        jsonb NOT NULL DEFAULT '{}'::jsonb,
   image        text NOT NULL DEFAULT '',
   description  text NOT NULL DEFAULT '',
+  -- Oculto del catalogo publico (GET /api/products lo filtra salvo que
+  -- pida ?all=true siendo admin). Sirve para sacar un producto de la
+  -- vidriera sin borrarlo ni perder su stock/historial.
+  hidden       boolean NOT NULL DEFAULT false,
   created_at   timestamptz NOT NULL DEFAULT now(),
   updated_at   timestamptz NOT NULL DEFAULT now()
 );

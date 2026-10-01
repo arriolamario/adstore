@@ -14,8 +14,9 @@ export default function ProductCard({ product }) {
     <article className="product-card">
       <Link to={`/producto/${product.id}`} className="product-card__media">
         <img src={product.image} alt={product.name} loading="lazy" />
-        <span className="product-card__tag">
+        <span className="product-card__tag" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           {soldOut ? <Badge variant="order">Agotado</Badge> : <AvailabilityBadge availability={product.availability} />}
+          {product.hidden && <Badge variant="order">Oculto (solo vos lo ves)</Badge>}
         </span>
       </Link>
 
