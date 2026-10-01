@@ -17,7 +17,10 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +33,11 @@
           "photosPermission": "Se usa para elegir la foto de un producto."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "facd845b-e2a3-41c3-bfe2-872aa67298dd"
+      }
+    }
   }
 }

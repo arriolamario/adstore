@@ -72,8 +72,9 @@ export default function AdminProducts() {
                     {p.availability === 'stock' ? 'En stock' : 'A pedido'}
                   </span>
                 </td>
-                <td title={p.availability === 'stock' ? p.sizes.map((s) => `${s}: ${p.stock?.[s] || 0}`).join('  ') : ''}>
+                <td title={p.availability === 'stock' ? Object.entries(p.stock || {}).map(([k, v]) => `${k}: ${v}`).join('  ') : ''}>
                   {p.availability === 'stock' ? totalStock(p) : '—'}
+                  {p.colors?.length > 0 && <span className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}> ({p.colors.length} colores)</span>}
                 </td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn btn--ghost btn--sm" onClick={() => navigate(`/admin/producto/${p.id}`)}>Editar</button>

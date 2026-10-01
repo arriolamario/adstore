@@ -4,7 +4,7 @@ import Badge, { AvailabilityBadge } from '../ui/Badge'
 import Button from '../ui/Button'
 import QuickReserveModal from './QuickReserveModal'
 import { currency } from '../../lib/format'
-import { isSoldOut } from '../../lib/inventory'
+import { isSoldOut, hasColors } from '../../lib/inventory'
 
 export default function ProductCard({ product }) {
   const [open, setOpen] = useState(false)
@@ -23,6 +23,9 @@ export default function ProductCard({ product }) {
         <span className="product-card__brand">{product.brand}</span>
         <Link to={`/producto/${product.id}`} className="product-card__name">{product.name}</Link>
         <span className="badge badge--brand" style={{ alignSelf: 'flex-start' }}>{product.category}</span>
+        {hasColors(product) && (
+          <span className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}>{product.colors.length} colores</span>
+        )}
 
         <div className="product-card__foot">
           <span className="product-card__price">{currency(product.price)}</span>

@@ -129,6 +129,21 @@ Para evitar dudas de "donde vive cada dato":
 | Carrito (borrador, sin confirmar) | `localStorage` del navegador | Evita crear filas en la DB por cada click; se descarta o se confirma como reserva |
 | Sesion (usuario logueado) | Cookie `httpOnly` firmada (JWT) | El servidor es quien decide quien sos; el JS del navegador no puede leerla ni falsificarla (ver "Seguridad" mas abajo) |
 
+### Stock: talle, y color si el producto lo usa
+
+`products.stock` es un objeto `{ clave: unidades }`. La clave es el **talle**
+solo (`"40"`), salvo que el producto tenga `colors` cargado — ahi pasa a ser
+**`"talle|color"`** (`"L|Negro"`). El color es una dimension **opcional por
+producto** (no todo lo que se vende tiene variantes de color: zapatillas,
+accesorios), asi que un producto sin `colors` sigue funcionando exactamente
+igual que antes de que existiera esta feature. Toda la logica de armar/leer
+esa clave esta centralizada en `src/lib/inventory.js` (`stockKey`,
+`hasColors`, `sizeStock`, `availableSizes`, `availableColors`,
+`imageForColor`) — el backend reimplementa la misma convencion de clave en
+`server/lib/stock.js` y `server/routes/orders.routes.js` (no comparten
+codigo con el frontend, pero si el mismo criterio; si cambia uno hay que
+replicarlo en el otro, igual que con `server/lib/format.js` vs `src/lib/format.js`).
+
 ## Entornos y bases de datos
 
 Tres bases de Postgres, cada una con un proposito distinto — nunca se mezclan:

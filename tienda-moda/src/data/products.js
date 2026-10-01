@@ -53,10 +53,20 @@ export const SEED_PRODUCTS = [
     description: 'Frisa de 480 g/m2, calce oversize y punos reforzados. Prenda estrella para el invierno.',
   },
   {
+    // Demo de variantes de color: el color es opcional por producto (ver
+    // src/lib/inventory.js) — este lo usa para mostrar como funciona; la
+    // mayoria del catalogo semilla sigue sin colores, a proposito.
     id: 'p-006', name: 'Remera Pima Essential', brand: 'AD Basics', category: 'Ropa',
     price: 32990, availability: 'stock',
     sizes: ['S', 'M', 'L', 'XL'],
-    stock: { S: 8, M: 12, L: 12, XL: 8 },
+    colors: [
+      { name: 'Negro', image: img('1521572163474-6864f9cf17ab') },
+      { name: 'Blanco', image: img('1583743814966-8936f5b7be1a') },
+    ],
+    stock: {
+      'S|Negro': 4, 'M|Negro': 6, 'L|Negro': 6, 'XL|Negro': 4,
+      'S|Blanco': 4, 'M|Blanco': 6, 'L|Blanco': 6, 'XL|Blanco': 4,
+    },
     image: img('1521572163474-6864f9cf17ab'),
     description: 'Algodon pima de fibra larga, tacto suave y caida perfecta. Cuello reforzado que no se deforma.',
   },

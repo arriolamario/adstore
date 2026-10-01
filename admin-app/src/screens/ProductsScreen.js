@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
@@ -8,10 +8,10 @@ import Button from '../components/Button'
 import Badge from '../components/Badge'
 import { colors, radius } from '../lib/theme'
 import { currency } from '../lib/format'
-import { totalStock } from '../lib/inventory'
+import { totalStock, stockKey } from '../lib/inventory'
 import { api } from '../lib/api'
 
-const BLANK = { name: '', brand: '', category: '', price: '', availability: 'stock', sizes: '', stock: {}, image: '', description: '' }
+const BLANK = { name: '', brand: '', category: '', price: '', availability: 'stock', sizes: '', colors: [], stock: {}, image: '', description: '' }
 
 export default function ProductsScreen() {
   const [products, setProducts] = useState([])
@@ -37,7 +37,7 @@ export default function ProductsScreen() {
   const visible = products.filter((p) => `${p.name} ${p.brand}`.toLowerCase().includes(q.toLowerCase()))
 
   const openNew = () => setEditing({ ...BLANK })
-  const openEdit = (p) => setEditing({ ...p, sizes: (p.sizes || []).join(', '), price: String(p.price) })
+  const openEdit = (p) => setEditing({ ...p, sizes: (p.sizes || []).join(', '), colors: p.colors || [], price: String(p.price) })
 
   const remove = (p) => {
     Alert.alert('Eliminar producto', `Eliminar "${p.name}"?`, [
@@ -78,7 +78,9 @@ export default function ProductsScreen() {
             {p.image ? <Image source={{ uri: p.image }} style={styles.thumb} /> : <View style={styles.thumb} />}
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{p.name}</Text>
-              <Text style={styles.meta}>{p.brand} · {p.category}</Text>
+              <Text style={styles.meta}>
+                {p.brand} · {p.category}{p.colors?.length > 0 ? ` · ${p.colors.length} colores` : ''}
+              </Text>
               <View style={styles.rowBetween}>
                 <Text style={styles.price}>{currency(p.price)}</Text>
                 {p.availability === 'stock' ? (
@@ -106,39 +108,58 @@ export default function ProductsScreen() {
 
 function ProductFormModal({ visible, product, categories, onClose, onSaved, onDelete }) {
   const [form, setForm] = useState(BLANK)
+  const [useColors, setUseColors] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => { if (product) setForm(product) }, [product])
+  useEffect(() => {
+    if (product) {
+      setForm(product)
+      setUseColors((product.colors || []).length > 0)
+    }
+  }, [product])
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
   const sizesArr = (form.sizes || '').split(',').map((s) => s.trim()).filter(Boolean)
+  const colorNames = useColors ? (form.colors || []).map((c) => c.name.trim()).filter(Boolean) : []
 
-  const pickImage = async () => {
+  const pickImage = async (onPicked) => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!perm.granted) return Alert.alert('Permiso necesario', 'Se necesita acceso a la galeria.')
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      base64: true,
-      quality: 0.6,
-    })
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], base64: true, quality: 0.6 })
     if (result.canceled) return
-    const asset = result.assets[0]
-    set('image')(`data:image/jpeg;base64,${asset.base64}`)
+    onPicked(`data:image/jpeg;base64,${result.assets[0].base64}`)
   }
+
+  const addColor = () => setForm((f) => ({ ...f, colors: [...(f.colors || []), { name: '', image: '' }] }))
+  const removeColor = (idx) => setForm((f) => ({ ...f, colors: f.colors.filter((_, i) => i !== idx) }))
+  const setColorName = (idx, name) => setForm((f) => ({ ...f, colors: f.colors.map((c, i) => (i === idx ? { ...c, name } : c)) }))
+  const setColorImage = (idx, uri) => setForm((f) => ({ ...f, colors: f.colors.map((c, i) => (i === idx ? { ...c, image: uri } : c)) }))
+
+  const setSizeStock = (size, color, v) =>
+    setForm((f) => ({ ...f, stock: { ...f.stock, [stockKey(size, color)]: Number(v) || 0 } }))
 
   const save = async () => {
     setError('')
     if (!form.name?.trim()) return setError('El nombre es obligatorio.')
+    if (useColors && (form.colors || []).some((c) => !c.name.trim())) {
+      return setError('Todos los colores necesitan un nombre (o quitalos).')
+    }
     setBusy(true)
     try {
       const stock = form.availability === 'stock'
-        ? sizesArr.reduce((acc, s) => ({ ...acc, [s]: Number(form.stock?.[s]) || 0 }), {})
+        ? (useColors
+          ? sizesArr.reduce((acc, s) => ({
+            ...acc,
+            ...colorNames.reduce((cacc, c) => ({ ...cacc, [stockKey(s, c)]: Number(form.stock?.[stockKey(s, c)]) || 0 }), {}),
+          }), {})
+          : sizesArr.reduce((acc, s) => ({ ...acc, [s]: Number(form.stock?.[s]) || 0 }), {}))
         : {}
       const payload = {
         ...form,
         price: Number(form.price) || 0,
         sizes: sizesArr,
+        colors: useColors ? form.colors.map((c) => ({ name: c.name.trim(), image: c.image || '' })) : [],
         stock,
       }
       if (form.id) await api.products.update(form.id, payload)
@@ -159,8 +180,8 @@ function ProductFormModal({ visible, product, categories, onClose, onSaved, onDe
           <Pressable onPress={onClose}><Text style={styles.close}>✕</Text></Pressable>
         </View>
 
-        <Pressable onPress={pickImage} style={styles.imagePicker}>
-          {form.image ? <Image source={{ uri: form.image }} style={styles.previewImg} /> : <Text style={styles.textMuted}>Tocar para elegir una foto</Text>}
+        <Pressable onPress={() => pickImage(set('image'))} style={styles.imagePicker}>
+          {form.image ? <Image source={{ uri: form.image }} style={styles.previewImg} /> : <Text style={styles.textMuted}>Tocar para elegir una foto de portada</Text>}
         </Pressable>
 
         <Field label="Nombre" value={form.name} onChangeText={set('name')} />
@@ -195,22 +216,71 @@ function ProductFormModal({ visible, product, categories, onClose, onSaved, onDe
 
         <Field label="Talles (separados por coma)" value={form.sizes} onChangeText={set('sizes')} placeholder="38, 39, 40" />
 
+        <View style={styles.switchRow}>
+          <Text style={styles.fieldLabel}>Este producto tiene variantes de color</Text>
+          <Switch value={useColors} onValueChange={setUseColors} trackColor={{ true: colors.brand600 }} />
+        </View>
+
+        {useColors && (
+          <View style={{ marginBottom: 8 }}>
+            {(form.colors || []).map((c, idx) => (
+              <View key={idx} style={styles.colorRow}>
+                <Pressable onPress={() => pickImage((uri) => setColorImage(idx, uri))} style={styles.colorThumb}>
+                  {c.image ? <Image source={{ uri: c.image }} style={styles.previewImg} /> : <Text style={styles.tinyMuted}>Foto</Text>}
+                </Pressable>
+                <TextInput
+                  style={[styles.stockInput, { flex: 1, textAlign: 'left' }]}
+                  placeholder="Nombre del color"
+                  placeholderTextColor={colors.textMuted}
+                  value={c.name}
+                  onChangeText={(v) => setColorName(idx, v)}
+                />
+                <Pressable onPress={() => removeColor(idx)}><Text style={{ color: colors.danger, fontWeight: '700' }}>Quitar</Text></Pressable>
+              </View>
+            ))}
+            <Button title="+ Agregar color" variant="secondary" onPress={addColor} style={{ marginTop: 4 }} />
+          </View>
+        )}
+
         {form.availability === 'stock' && sizesArr.length > 0 && (
           <>
-            <Text style={styles.fieldLabel}>Stock por talle</Text>
-            <View style={styles.stockGrid}>
-              {sizesArr.map((s) => (
-                <View key={s} style={styles.stockItem}>
-                  <Text style={styles.stockLabel}>{s}</Text>
-                  <TextInput
-                    style={styles.stockInput}
-                    keyboardType="numeric"
-                    value={String(form.stock?.[s] ?? 0)}
-                    onChangeText={(v) => set('stock')({ ...form.stock, [s]: Number(v) || 0 })}
-                  />
+            <Text style={styles.fieldLabel}>Stock por talle{useColors ? ' y color' : ''}</Text>
+            {useColors ? (
+              colorNames.length === 0 ? (
+                <Text style={styles.textMuted}>Agrega al menos un color con nombre para cargar su stock.</Text>
+              ) : colorNames.map((c) => (
+                <View key={c} style={{ marginBottom: 10 }}>
+                  <Text style={[styles.fieldLabel, { marginBottom: 6 }]}>{c}</Text>
+                  <View style={styles.stockGrid}>
+                    {sizesArr.map((s) => (
+                      <View key={s} style={styles.stockItem}>
+                        <Text style={styles.stockLabel}>{s}</Text>
+                        <TextInput
+                          style={styles.stockInput}
+                          keyboardType="numeric"
+                          value={String(form.stock?.[stockKey(s, c)] ?? 0)}
+                          onChangeText={(v) => setSizeStock(s, c, v)}
+                        />
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              ))}
-            </View>
+              ))
+            ) : (
+              <View style={styles.stockGrid}>
+                {sizesArr.map((s) => (
+                  <View key={s} style={styles.stockItem}>
+                    <Text style={styles.stockLabel}>{s}</Text>
+                    <TextInput
+                      style={styles.stockInput}
+                      keyboardType="numeric"
+                      value={String(form.stock?.[s] ?? 0)}
+                      onChangeText={(v) => setSizeStock(s, undefined, v)}
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         )}
 
@@ -246,12 +316,19 @@ const styles = StyleSheet.create({
   },
   previewImg: { width: '100%', height: '100%' },
   textMuted: { color: colors.textMuted },
+  tinyMuted: { color: colors.textMuted, fontSize: 10 },
   fieldLabel: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 8 },
   filtersRow: { flexDirection: 'row', gap: 8 },
   chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface },
   chipActive: { backgroundColor: colors.brand600, borderColor: colors.brand600 },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.text },
   chipTextActive: { color: colors.textInvert },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  colorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  colorThumb: {
+    width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.bgMuted,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
+  },
   stockGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   stockItem: { width: 70 },
   stockLabel: { fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 },

@@ -34,6 +34,12 @@ CREATE TABLE products (
   price        integer NOT NULL DEFAULT 0,
   availability text NOT NULL DEFAULT 'stock',
   sizes        jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- Variantes de color: [{ name, image }]. Opcional por producto — si esta
+  -- vacio, el stock se indexa solo por talle (ver nota mas abajo y
+  -- src/lib/inventory.js). Si tiene colores, cada talle+color tiene su
+  -- propia foto y su propio stock.
+  colors       jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- Stock por clave: "talle" si el producto no usa colores, "talle|color" si los usa.
   stock        jsonb NOT NULL DEFAULT '{}'::jsonb,
   image        text NOT NULL DEFAULT '',
   description  text NOT NULL DEFAULT '',

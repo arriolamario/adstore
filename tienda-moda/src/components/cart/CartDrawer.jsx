@@ -43,7 +43,7 @@ export default function CartDrawer() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 'var(--fs-sm)' }}>{i.name}</div>
                   <div className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}>
-                    Talle {i.size} · {i.availability === 'order' ? 'A pedido' : 'En stock'}
+                    {i.color ? `${i.color} · Talle ${i.size}` : `Talle ${i.size}`} · {i.availability === 'order' ? 'A pedido' : 'En stock'}
                   </div>
                   <div className="qty" style={{ marginTop: 'var(--space-2)' }}>
                     <button onClick={() => setQty(i.key, i.qty - 1)} aria-label="Menos">−</button>

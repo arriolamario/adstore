@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import { sizeStock } from '../lib/inventory'
+import { sizeStock, imageForColor } from '../lib/inventory'
 import { api } from '../lib/api'
 
 const CartContext = createContext(null)
 
-const lineKey = (productId, size) => `${productId}::${size || 'u'}`
+const lineKey = (productId, size, color) => `${productId}::${size || 'u'}::${color || ''}`
 
 export function CartProvider({ children }) {
   // El carrito es un borrador local; las reservas confirmadas viven en Postgres.
@@ -14,13 +14,13 @@ export function CartProvider({ children }) {
   const [ordersLoading, setOrdersLoading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const addItem = useCallback((product, size, qty = 1) => {
+  const addItem = useCallback((product, size, qty = 1, color) => {
     const finalSize = size || 'Unico'
-    const units = sizeStock(product, finalSize) // Infinity si es a pedido
+    const units = sizeStock(product, finalSize, color) // Infinity si es a pedido
     if (units <= 0) return
     const max = Number.isFinite(units) ? units : null
     setItems((prev) => {
-      const key = lineKey(product.id, finalSize)
+      const key = lineKey(product.id, finalSize, color)
       const found = prev.find((i) => i.key === key)
       if (found) {
         const capped = max ? Math.min(found.qty + qty, max) : found.qty + qty
@@ -34,9 +34,10 @@ export function CartProvider({ children }) {
           name: product.name,
           brand: product.brand,
           price: product.price,
-          image: product.image,
+          image: color ? imageForColor(product, color) : product.image,
           availability: product.availability,
           size: finalSize,
+          color: color || undefined,
           qty: max ? Math.min(qty, max) : qty,
           max,
         },

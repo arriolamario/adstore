@@ -159,7 +159,7 @@ export default function CheckoutPage() {
           <h3>Resumen</h3>
           {items.map((i) => (
             <div key={i.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-sm)' }}>
-              <span>{i.qty}× {i.name} <span className="text-muted">({i.size})</span></span>
+              <span>{i.qty}× {i.name} <span className="text-muted">({i.color ? `${i.color}, ${i.size}` : i.size})</span></span>
               <span>{currency(i.price * i.qty)}</span>
             </div>
           ))}

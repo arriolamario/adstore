@@ -54,7 +54,7 @@ export default function OrderDetailModal({ order, onClose }) {
                       <div className="text-muted" style={{ fontSize: 'var(--fs-xs)' }}>{i.brand}</div>
                       <AvailabilityBadge availability={i.availability} />
                     </td>
-                    <td>{i.size}</td>
+                    <td>{i.color ? `${i.color} / ${i.size}` : i.size}</td>
                     <td>{i.qty}</td>
                     <td>{currency(i.price)}</td>
                     <td>{currency(i.price * i.qty)}</td>

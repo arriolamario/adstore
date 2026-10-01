@@ -120,7 +120,7 @@ export default function OrdersScreen() {
             <Card style={{ marginBottom: 16 }}>
               {(selected.items || []).map((it, idx) => (
                 <View key={idx} style={styles.itemRow}>
-                  <Text style={styles.itemText}>{it.qty}× {it.name} (talle {it.size})</Text>
+                  <Text style={styles.itemText}>{it.qty}× {it.name} ({it.color ? `${it.color}, talle ${it.size}` : `talle ${it.size}`})</Text>
                   <Text style={styles.itemText}>{currency(it.price * it.qty)}</Text>
                 </View>
               ))}

@@ -43,7 +43,7 @@ export default function OrdersPage() {
           <div className="stack" style={{ gap: 'var(--space-2)' }}>
             {o.items.map((i, idx) => (
               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-sm)' }}>
-                <span>{i.qty}× {i.name} <span className="text-muted">(talle {i.size})</span></span>
+                <span>{i.qty}× {i.name} <span className="text-muted">({i.color ? `${i.color}, talle ${i.size}` : `talle ${i.size}`})</span></span>
                 <span>{currency(i.price * i.qty)}</span>
               </div>
             ))}

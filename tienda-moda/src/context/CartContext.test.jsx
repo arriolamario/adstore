@@ -12,6 +12,13 @@ const orderProduct = {
   image: '', availability: 'order', sizes: ['41'], stock: {},
 }
 
+const colorProduct = {
+  id: 'p-006', name: 'Remera Pima Essential', brand: 'AD Basics', price: 100,
+  image: 'default.jpg', availability: 'stock', sizes: ['M'],
+  colors: [{ name: 'Negro', image: 'negro.jpg' }, { name: 'Blanco', image: '' }],
+  stock: { 'M|Negro': 2, 'M|Blanco': 1 },
+}
+
 const wrapper = ({ children }) => <CartProvider>{children}</CartProvider>
 
 beforeEach(() => {
@@ -72,5 +79,27 @@ describe('CartContext', () => {
     act(() => result.current.addItem(orderProduct, '41'))
 
     expect(result.current.hasOrderItems).toBe(true)
+  })
+
+  it('el mismo talle en dos colores distintos son lineas separadas del carrito', () => {
+    const { result } = renderHook(() => useCart(), { wrapper })
+
+    act(() => result.current.addItem(colorProduct, 'M', 1, 'Negro'))
+    act(() => result.current.addItem(colorProduct, 'M', 1, 'Blanco'))
+
+    expect(result.current.items).toHaveLength(2)
+    expect(result.current.items.map((i) => i.color).sort()).toEqual(['Blanco', 'Negro'])
+    expect(result.current.items.find((i) => i.color === 'Negro').image).toBe('negro.jpg')
+    expect(result.current.items.find((i) => i.color === 'Blanco').image).toBe('default.jpg') // sin foto propia
+  })
+
+  it('tope de stock por talle+color, independiente entre colores', () => {
+    const { result } = renderHook(() => useCart(), { wrapper })
+
+    act(() => result.current.addItem(colorProduct, 'M', 5, 'Negro')) // stock real: 2
+    act(() => result.current.addItem(colorProduct, 'M', 5, 'Blanco')) // stock real: 1
+
+    expect(result.current.items.find((i) => i.color === 'Negro').qty).toBe(2)
+    expect(result.current.items.find((i) => i.color === 'Blanco').qty).toBe(1)
   })
 })

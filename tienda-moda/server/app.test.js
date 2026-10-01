@@ -386,3 +386,60 @@ describe('API reservas: dueno de sesion, no del body; stock transaccional', () =
     expect(await currentStock()).toBe(before) // sin cambios, no se duplica la reposicion
   })
 })
+
+describe('API reservas: productos con color (dimension opcional del stock)', () => {
+  let productId
+
+  beforeAll(async () => {
+    const create = await adminAgent.post('/api/products').send({
+      name: 'Remera Test', brand: 'Test', category: 'Ropa', price: 1000,
+      availability: 'stock', sizes: ['M'],
+      colors: [{ name: 'Negro', image: '' }, { name: 'Blanco', image: '' }],
+      stock: { 'M|Negro': 2, 'M|Blanco': 1 },
+      image: '', description: '',
+    })
+    productId = create.body.id
+  })
+
+  const stockFor = async (key) => {
+    const list = await request(app).get('/api/products')
+    return list.body.find((p) => p.id === productId).stock[key]
+  }
+
+  it('crear una reserva con color descuenta la clave talle+color correcta, sin tocar el otro color', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      fulfillment: 'pickup',
+      customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
+      items: [{ productId, name: 'Remera Test', brand: 'Test', price: 1000, image: '', availability: 'stock', size: 'M', color: 'Negro', qty: 1 }],
+    })
+    expect(order.status).toBe(201)
+    expect(order.body.items[0].color).toBe('Negro')
+
+    expect(await stockFor('M|Negro')).toBe(1) // 2 -> 1
+    expect(await stockFor('M|Blanco')).toBe(1) // sin cambios
+  })
+
+  it('pedir mas de lo disponible en ese color da 409, aunque el otro color si tenga stock', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      fulfillment: 'pickup',
+      customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
+      items: [{ productId, name: 'Remera Test', brand: 'Test', price: 1000, image: '', availability: 'stock', size: 'M', color: 'Blanco', qty: 5 }],
+    })
+    expect(order.status).toBe(409)
+    expect(order.body.error).toContain('color Blanco')
+  })
+
+  it('cancelar repone la clave talle+color correcta', async () => {
+    const order = await customerAgent.post('/api/orders').send({
+      fulfillment: 'pickup',
+      customer: { name: 'Cliente', phone: '1155555555', email: 'cliente@example.com' },
+      items: [{ productId, name: 'Remera Test', brand: 'Test', price: 1000, image: '', availability: 'stock', size: 'M', color: 'Blanco', qty: 1 }],
+    })
+    expect(order.status).toBe(201)
+    expect(await stockFor('M|Blanco')).toBe(0)
+
+    await adminAgent.patch(`/api/orders/${order.body.id}/status`).send({ status: 'cancelado' })
+    expect(await stockFor('M|Blanco')).toBe(1)
+    expect(await stockFor('M|Negro')).toBe(1) // sin cambios
+  })
+})

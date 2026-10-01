@@ -34,9 +34,11 @@ ordersRouter.post('/', requireAuth, wrap(async (req, res) => {
       const { rows } = await client.query('SELECT stock FROM products WHERE id=$1 FOR UPDATE', [it.productId])
       if (!rows.length) throw fail(409, `El producto "${it.name}" ya no existe`)
       const stock = rows[0].stock || {}
-      const current = Number(stock[it.size] || 0)
-      if (current < it.qty) throw fail(409, `Sin stock suficiente de "${it.name}" (talle ${it.size})`)
-      stock[it.size] = current - it.qty
+      const key = it.color ? `${it.size}|${it.color}` : it.size
+      const current = Number(stock[key] || 0)
+      const label = it.color ? `talle ${it.size}, color ${it.color}` : `talle ${it.size}`
+      if (current < it.qty) throw fail(409, `Sin stock suficiente de "${it.name}" (${label})`)
+      stock[key] = current - it.qty
       await client.query('UPDATE products SET stock=$1::jsonb, updated_at=now() WHERE id=$2',
         [JSON.stringify(stock), it.productId])
     }

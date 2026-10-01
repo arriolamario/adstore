@@ -4,6 +4,33 @@ Registro de cambios notables del proyecto. Formato libre pero constante:
 fecha, y que cambio agrupado por tipo. Se actualiza **en el mismo commit**
 que el cambio que describe — no despues.
 
+## 2026-10-01
+
+### Agregado
+- **Color como dimension opcional del stock**: un producto puede tener
+  `colors: [{ name, image }]`, y entonces el stock se guarda por clave
+  `"talle|color"` en vez de solo `"talle"`. Es **opcional por producto** —
+  uno sin colores sigue funcionando exactamente igual que antes (stock por
+  talle solo). Cada color puede tener su propia foto.
+- Nueva columna `products.colors` (jsonb, default `[]`).
+- Sitio web: selector de color (ademas del de talle) en la ficha de
+  producto, el modal de reserva rapida, el carrito, el checkout, "Mis
+  pedidos" y el detalle de reserva del admin. El formulario de alta/edicion
+  de productos del admin tiene un toggle "tiene variantes de color" que
+  revela la lista de colores (cada uno con su foto) y una grilla de stock
+  talle × color.
+- App Android (`admin-app/`): mismo toggle y grilla de stock talle × color
+  en la pantalla de Productos; el detalle de reserva muestra el color.
+- Backend: `adjustStockForItems` (crear/cambiar estado/eliminar reserva)
+  arma la clave `talle|color` cuando el item trae color. El mensaje de
+  "sin stock suficiente" menciona el color cuando corresponde.
+- 6 tests nuevos (unitarios de `lib/inventory.js` + integracion end-to-end:
+  crear reserva con color descuenta la clave correcta sin tocar el otro
+  color, 409 respeta el color pedido, cancelar repone la clave correcta).
+- Catalogo semilla: "Remera Pima Essential" ahora tiene colores Negro/Blanco
+  de ejemplo (el resto del catalogo sigue sin colores, a proposito, para
+  mostrar que es opcional).
+
 ## 2026-09-17 (mas tarde)
 
 ### Agregado

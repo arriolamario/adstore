@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import Badge, { AvailabilityBadge } from '../components/ui/Badge'
 import { currency } from '../lib/format'
-import { availableSizes, isSoldOut, sizeStock, totalStock } from '../lib/inventory'
+import { availableSizes, isSoldOut, sizeStock, totalStock, hasColors, imageForColor } from '../lib/inventory'
 import { useCatalog } from '../context/CatalogContext'
 import { useCart } from '../context/CartContext'
 
@@ -14,8 +14,12 @@ export default function ProductPage() {
   const { addItem } = useCart()
   const product = getProduct(id)
 
+  const withColors = hasColors(product)
+  const firstColor = withColors ? product.colors[0]?.name : undefined
+  const [color, setColor] = useState(firstColor)
+
   const firstSize =
-    product?.availability === 'stock' ? availableSizes(product)[0] : product?.sizes?.[0]
+    product?.availability === 'stock' ? availableSizes(product, firstColor)[0] : product?.sizes?.[0]
   const [size, setSize] = useState(firstSize || 'Unico')
 
   if (!product) {
@@ -32,8 +36,15 @@ export default function ProductPage() {
 
   const soldOut = isSoldOut(product)
   const isStock = product.availability === 'stock'
-  const selectedUnits = sizeStock(product, size)
+  const selectedUnits = sizeStock(product, size, color)
   const canReserve = !soldOut && selectedUnits > 0
+  const image = withColors ? imageForColor(product, color) : product.image
+
+  const pickColor = (c) => {
+    setColor(c)
+    const firstOk = availableSizes(product, c)[0]
+    if (firstOk) setSize(firstOk)
+  }
 
   return (
     <div className="page">
@@ -44,7 +55,7 @@ export default function ProductPage() {
 
         <div className="pdp">
           <div className="pdp__media">
-            <img src={product.image} alt={product.name} />
+            <img src={image} alt={product.name} />
           </div>
 
           <div>
@@ -54,6 +65,25 @@ export default function ProductPage() {
 
             <div className="pdp__price">{currency(product.price)}</div>
             <p className="text-soft">{product.description}</p>
+
+            {withColors && (
+              <>
+                <div style={{ marginTop: 'var(--space-4)', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>
+                  Color: <span style={{ fontWeight: 400, color: 'var(--text-soft)' }}>{color}</span>
+                </div>
+                <div className="pdp__sizes">
+                  {product.colors.map((c) => (
+                    <button
+                      key={c.name}
+                      className={`chip ${color === c.name ? 'is-active' : ''}`}
+                      onClick={() => pickColor(c.name)}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
             <div style={{ marginTop: 'var(--space-4)', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>
               Elegi tu talle
@@ -66,7 +96,7 @@ export default function ProductPage() {
 
             <div className="pdp__sizes">
               {product.sizes?.map((s) => {
-                const units = sizeStock(product, s)
+                const units = sizeStock(product, s, color)
                 const disabled = isStock && units <= 0
                 return (
                   <button
@@ -84,12 +114,12 @@ export default function ProductPage() {
 
             {isStock && !soldOut && canReserve && selectedUnits <= 3 && (
               <p className="text-soft" style={{ fontSize: 'var(--fs-sm)' }}>
-                Quedan {selectedUnits} en talle {size}.
+                Quedan {selectedUnits}{withColors ? ` en ${color}, talle ${size}` : ` en talle ${size}`}.
               </p>
             )}
 
             <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
-              <Button size="lg" disabled={!canReserve} onClick={() => addItem(product, size)}>
+              <Button size="lg" disabled={!canReserve} onClick={() => addItem(product, size, 1, color)}>
                 {canReserve ? 'Agregar a la reserva' : 'Sin stock'}
               </Button>
               <Button
@@ -97,7 +127,7 @@ export default function ProductPage() {
                 variant="secondary"
                 disabled={!canReserve}
                 onClick={() => {
-                  addItem(product, size)
+                  addItem(product, size, 1, color)
                   navigate('/checkout')
                 }}
               >
